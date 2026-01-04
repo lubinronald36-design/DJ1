@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MyChillingTime — FINAL</title>
+
+<style>
+body{margin:0;padding:20px;font-family:system-ui,Arial;background:#0b0d12;color:#eaeaff}
+.wrap{max-width:900px;margin:auto}
+h1{margin:0 0 6px}
+.muted{color:#aab3d6}
+.card{background:#141826;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px;margin:12px 0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.12);color:#fff;font-weight:800;cursor:pointer}
+button:hover{transform:translateY(-1px)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.primary{background:#fff;color:#0b0d12;border-color:transparent}
+.danger{background:rgba(255,77,77,.18);border-color:rgba(255,77,77,.35)}
+.pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.18);color:#c7cfef;font-size:13px}
+input[type="range"]{width:160px}
+kbd{display:inline-block;min-width:28px;text-align:center;padding:6px 8px;margin:2px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);font-weight:900}
+.status{margin-top:10px;font-size:13px;color:#aab3d6}
+.mono{font-family:ui-monospace,monospace}
+audio{width:100%}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+<h1>MyChillingTime — FINAL</h1>
+<p class="muted">
+Files in SAME folder:
+<span class="mono">bott.mp3</span>,
+<span class="mono">dj-elvis-dante.wav</span>,
+<span class="mono">boom.wav</span>
+</p>
+
+<!-- BEAT -->
+<div class="card">
+  <div class="row">
+    <button id="startBeat" class="primary">▶ Start Beat</button>
+    <button id="stopBeat" class="danger" disabled>■ Stop Beat</button>
+
+    <span class="pill">
+      Beat Vol
+      <input id="beatVol" type="range" min="0" max="1" step="0.01" value="0.75">
+      <span id="beatVolLabel" class="mono">0.75</span>
+    </span>
+
+    <span class="pill">
+      Key Vol
+      <input id="keyVol" type="range" min="0" max="1" step="0.01" value="0.55">
+      <span id="keyVolLabel" class="mono">0.55</span>
+    </span>
+  </div>
+  <div class="status" id="status">Status: ready.</div>
+</div>
+
+<!-- FX -->
+<div class="card">
+  <div class="row">
+    <button id="elvisBtn" class="primary">🎙️ ELVIS</button>
+    <button id="boomBtn">💥 BOOM</button>
+  </div>
+</div>
+
+<!-- KEYS -->
+<div class="card">
+  <p class="muted"><b>Keyboard (API)</b></p>
+  <kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd><kbd>G</kbd><kbd>H</kbd><kbd>J</kbd>
+  <kbd>K</kbd><kbd>L</kbd>
+  <kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd><kbd>R</kbd><kbd>T</kbd><kbd>Y</kbd><kbd>U</kbd><kbd>I</kbd><kbd>O</kbd><kbd>P</kbd>
+</div>
+
+<!-- RECORDER -->
+<div class="card">
+  <div class="row">
+    <button id="recBtn" class="primary">⏺ Start Recording</button>
+    <button id="stopRecBtn" class="danger" disabled>⏹ Stop & Save</button>
+  </div>
+  <div class="status" id="recStatus">Recorder: idle.</div>
+  <audio id="playback" controls></audio>
+  <a id="download" style="display:none;color:#9fffcf">⬇ Download recording</a>
+</div>
+</div>
+
+<script>
+/* FILES */
+const BEAT_FILE="bott.mp3";
+const ELVIS_FILE="dj-elvis-dante.wav";
+const BOOM_FILE="boom.wav";
+
+/* UI */
+const statusEl=document.getElementById("status");
+const startBeat=document.getElementById("startBeat");
+const stopBeat=document.getElementById("stopBeat");
+const beatVol=document.getElementById("beatVol");
+const beatVolLabel=document.getElementById("beatVolLabel");
+const keyVol=document.getElementById("keyVol");
+const keyVolLabel=document.getElementById("keyVolLabel");
+const elvisBtn=document.getElementById("elvisBtn");
+const boomBtn=document.getElementById("boomBtn");
+
+/* AUDIO */
+const beat=new Audio(BEAT_FILE); beat.loop=true;
+const elvis=new Audio(ELVIS_FILE);
+const boom=new Audio(BOOM_FILE);
+
+/* WEB AUDIO KEYS */
+let ctx;
+function ac(){ if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)(); return ctx;}
+function playKey(){
+  const o=ac().createOscillator();
+  const g=ac().createGain();
+  o.frequency.value=220+Math.random()*900;
+  g.gain.value=keyVol.value*0.18;
+  o.connect(g); g.connect(ac().destination);
+  o.start(); o.stop(ac().currentTime+0.12);
+}
+const KEYS=new Set("ASDFGHJKLQWERTYUIOP".split(""));
+window.addEventListener("keydown",e=>{
+  if(!KEYS.has(e.key.toUpperCase()))return;
+  e.preventDefault(); playKey();
+},{passive:false});
+
+/* VOLUMES */
+function sync(){
+  beat.volume=beatVol.value;
+  beatVolLabel.textContent=beatVol.value;
+  keyVolLabel.textContent=keyVol.value;
+}
+beatVol.oninput=sync; keyVol.oninput=sync; sync();
+
+/* BEAT */
+startBeat.onclick=async()=>{
+  try{
+    ac().resume();
+    beat.currentTime=0;
+    await beat.play();
+    startBeat.disabled=true; stopBeat.disabled=false;
+    statusEl.textContent="Status: beat playing";
+  }catch{
+    statusEl.textContent="❌ bott.mp3 missing";
+  }
+};
+stopBeat.onclick=()=>{
+  beat.pause(); beat.currentTime=0;
+  startBeat.disabled=false; stopBeat.disabled=true;
+  statusEl.textContent="Status: stopped";
+};
+
+/* FX */
+elvisBtn.onclick=async()=>{ try{ac().resume(); elvis.currentTime=0; await elvis.play();}catch{} };
+boomBtn.onclick=async()=>{ try{ac().resume(); boom.currentTime=0; await boom.play();}catch{} };
+
+/* RECORDER */
+const recBtn=document.getElementById("recBtn");
+const stopRecBtn=document.getElementById("stopRecBtn");
+const recStatus=document.getElementById("recStatus");
+const playback=document.getElementById("playback");
+const download=document.getElementById("download");
+
+let rec=null, chunks=[], stream=null;
+
+recBtn.onclick=async()=>{
+  // FIX #1: mic permission safe
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({audio:true});
+  }catch(e){
+    recStatus.textContent = "❌ Recorder: mic blocked / no permission";
+    return;
+  }
+
+  rec = new MediaRecorder(stream);
+  chunks = [];
+
+  rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
+
+  rec.onstop = ()=>{
+    const blob = new Blob(chunks,{type:"audio/webm"});
+    const url = URL.createObjectURL(blob);
+    playback.src = url;
+
+    download.href = url;
+    download.download = "mychillingtime-voice.webm";
+    download.style.display = "block";
+
+    recStatus.textContent = "Recorder: saved";
+
+    if(stream) stream.getTracks().forEach(t=>t.stop());
+    stream = null;
+    rec = null;
+  };
+
+  rec.start();
+  recBtn.disabled = true;
+  stopRecBtn.disabled = false;
+  recStatus.textContent = "Recorder: recording…";
+};
+
+stopRecBtn.onclick=()=>{
+  // FIX #2: stop safe
+  if(!rec){
+    recStatus.textContent="Recorder: idle.";
+    stopRecBtn.disabled=true;
+    recBtn.disabled=false;
+    return;
+  }
+  rec.stop();
+  recBtn.disabled=false;
+  stopRecBtn.disabled=true;
+};
+</script>
+</body>
+</html>
