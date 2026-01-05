@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MyChillingTime — UPGRADED (Samples + Synth + FX)</title>
+<title>MyChillingTime — UPGRADED (BOTH + FX FIX)</title>
 
 <style>
 body{margin:0;padding:20px;font-family:system-ui,Arial;background:#0b0d12;color:#eaeaff}
@@ -35,7 +35,10 @@ a{color:#9fffcf}
 <div class="wrap">
 <h1>MyChillingTime — UPGRADED</h1>
 <p class="muted">
-Repo files (same folder): <span class="mono">bott.mp3</span>, <span class="mono">dj-elvis-dante.wav</span>, <span class="mono">boom.wav</span>
+Files in SAME folder:
+<span class="mono">bott.mp3</span>,
+<span class="mono">dj-elvis-dante.wav</span>,
+<span class="mono">boom.wav</span>
 </p>
 
 <!-- BEAT -->
@@ -82,54 +85,62 @@ Repo files (same folder): <span class="mono">bott.mp3</span>, <span class="mono"
   </div>
 
   <div class="small">
-    Keys auto-map in order to: <b>ASDFGHJKL</b> then <b>QWERTYUIOP</b>. If you load 5 sounds, only first 5 keys get samples.
+    Keys auto-map in order to: <b>ASDFGHJKL</b> then <b>QWERTYUIOP</b>.
   </div>
 
   <div class="list" id="bankList"><b>Sample Bank:</b> (none loaded yet)</div>
 </div>
 
-<!-- FX -->
+<!-- FX (FIXED: ON/OFF + MIX + SOFT DISTORTION + SAFE ECHO) -->
 <div class="card">
   <div class="row">
     <button id="elvisBtn" class="primary">🎙️ ELVIS</button>
     <button id="boomBtn">💥 BOOM</button>
 
+    <button id="fxToggle" class="primary">FX: ON</button>
+
     <span class="pill">
-      FX Echo
-      <input id="echoAmt" type="range" min="0" max="1" step="0.01" value="0.25">
-      <span id="echoLabel" class="mono">0.25</span>
+      FX MIX
+      <input id="mixAmt" type="range" min="0" max="1" step="0.01" value="0.22">
+      <span id="mixLabel" class="mono">0.22</span>
+    </span>
+
+    <span class="pill">
+      Echo
+      <input id="echoAmt" type="range" min="0" max="1" step="0.01" value="0.18">
+      <span id="echoLabel" class="mono">0.18</span>
     </span>
 
     <span class="pill">
       Filter
-      <input id="filterAmt" type="range" min="0" max="1" step="0.01" value="0.15">
-      <span id="filterLabel" class="mono">0.15</span>
+      <input id="filterAmt" type="range" min="0" max="1" step="0.01" value="0.10">
+      <span id="filterLabel" class="mono">0.10</span>
     </span>
 
     <span class="pill">
       Distort
-      <input id="distAmt" type="range" min="0" max="1" step="0.01" value="0.10">
-      <span id="distLabel" class="mono">0.10</span>
+      <input id="distAmt" type="range" min="0" max="1" step="0.01" value="0.06">
+      <span id="distLabel" class="mono">0.06</span>
     </span>
 
     <span class="pill">
       Reverb
-      <input id="reverbAmt" type="range" min="0" max="1" step="0.01" value="0.18">
-      <span id="reverbLabel" class="mono">0.18</span>
+      <input id="reverbAmt" type="range" min="0" max="1" step="0.01" value="0.14">
+      <span id="reverbLabel" class="mono">0.14</span>
     </span>
   </div>
-  <div class="small">FX apply to <b>KEYS</b> (samples + synth). Beat/ELVIS/BOOM stay simple like before.</div>
+
+  <div class="small">
+    If FX is annoying: set <b>FX MIX</b> to 0.10–0.25 or tap <b>FX: OFF</b>.
+  </div>
 </div>
 
 <!-- KEYS -->
 <div class="card">
   <p class="muted"><b>Keyboard</b> (press keys)</p>
-  <div>
-    <kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd><kbd>G</kbd><kbd>H</kbd><kbd>J</kbd><kbd>K</kbd><kbd>L</kbd>
-  </div>
-  <div style="margin-top:6px">
-    <kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd><kbd>R</kbd><kbd>T</kbd><kbd>Y</kbd><kbd>U</kbd><kbd>I</kbd><kbd>O</kbd><kbd>P</kbd>
-  </div>
+  <kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd><kbd>G</kbd><kbd>H</kbd><kbd>J</kbd>
+  <kbd>K</kbd><kbd>L</kbd>
+  <kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd><kbd>R</kbd><kbd>T</kbd><kbd>Y</kbd><kbd>U</kbd><kbd>I</kbd><kbd>O</kbd><kbd>P</kbd>
 </div>
 
 <!-- RECORDER -->
@@ -140,14 +151,13 @@ Repo files (same folder): <span class="mono">bott.mp3</span>, <span class="mono"
   </div>
   <div class="status" id="recStatus">Recorder: idle.</div>
   <audio id="playback" controls></audio>
-  <a id="download" style="display:none">⬇ Download recording</a>
+  <a id="download" style="display:none;color:#9fffcf">⬇ Download recording</a>
   <div class="small">Note: mic recording needs HTTPS (GitHub Pages is fine).</div>
 </div>
-
 </div>
 
 <script>
-/* FILES (from your current build) */
+/* FILES */
 const BEAT_FILE="bott.mp3";
 const ELVIS_FILE="dj-elvis-dante.wav";
 const BOOM_FILE="boom.wav";
@@ -162,12 +172,16 @@ const keyVol=document.getElementById("keyVol");
 const keyVolLabel=document.getElementById("keyVolLabel");
 const elvisBtn=document.getElementById("elvisBtn");
 const boomBtn=document.getElementById("boomBtn");
+
 const sampleFiles=document.getElementById("sampleFiles");
 const sampleFolder=document.getElementById("sampleFolder");
 const bankList=document.getElementById("bankList");
 const keyMode=document.getElementById("keyMode");
 const clearBank=document.getElementById("clearBank");
 
+const fxToggle=document.getElementById("fxToggle");
+const mixAmt=document.getElementById("mixAmt");
+const mixLabel=document.getElementById("mixLabel");
 const echoAmt=document.getElementById("echoAmt");
 const filterAmt=document.getElementById("filterAmt");
 const distAmt=document.getElementById("distAmt");
@@ -177,30 +191,31 @@ const filterLabel=document.getElementById("filterLabel");
 const distLabel=document.getElementById("distLabel");
 const reverbLabel=document.getElementById("reverbLabel");
 
-/* SIMPLE AUDIO (beat + buttons) */
+/* AUDIO (simple) */
 const beat=new Audio(BEAT_FILE); beat.loop=true;
 const elvis=new Audio(ELVIS_FILE);
 const boom=new Audio(BOOM_FILE);
 
-/* WEB AUDIO CORE */
+/* WEB AUDIO */
 let ctx;
 function ac(){
   if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)();
   return ctx;
 }
 
-/* ===== KEY ENGINE (Samples + Synth + FX) ===== */
+/* ===== KEY ENGINE ===== */
 const KEY_ORDER = "ASDFGHJKLQWERTYUIOP".split("");
 const KEYS = new Set(KEY_ORDER);
 
-/* Sample Bank: key -> AudioBuffer */
-const sampleBank = new Map(); // key => {name, buffer}
+/* Sample bank: key -> {name, buffer} */
+const sampleBank = new Map();
 
-/* FX Nodes */
+/* FX graph nodes */
 let master, dryGain, fxIn, filter, delay, feedback, reverbSend, convolver, distort, wetGain;
+let fxEnabled = true;
 
-/* Create a tiny impulse for reverb (no external file) */
-function makeImpulse(seconds=1.5, decay=2.5){
+/* Impulse reverb */
+function makeImpulse(seconds=1.6, decay=2.2){
   const c = ac();
   const rate = c.sampleRate;
   const length = Math.floor(rate * seconds);
@@ -214,14 +229,15 @@ function makeImpulse(seconds=1.5, decay=2.5){
   return impulse;
 }
 
+/* Soft distortion curve (less harsh) */
 function makeDistortionCurve(amount){
-  const k = amount*600;
   const n = 44100;
   const curve = new Float32Array(n);
-  const deg = Math.PI / 180;
+  const a = Math.max(0, Math.min(1, amount));
+  const drive = 1 + a * 12;
   for(let i=0;i<n;i++){
     const x = (i*2/n) - 1;
-    curve[i] = (3+k)*x*20*deg / (Math.PI + k*Math.abs(x));
+    curve[i] = Math.tanh(x * drive);
   }
   return curve;
 }
@@ -231,13 +247,13 @@ function ensureGraph(){
   if(master) return;
 
   master = c.createGain();
-  master.gain.value = 0.8;
+  master.gain.value = 0.65;
 
-  // dry path
-  dryGain = c.createGain(); dryGain.gain.value = 1.0;
+  dryGain = c.createGain();
+  dryGain.gain.value = 1.0;
 
-  // fx chain
   fxIn = c.createGain();
+  fxIn.gain.value = 1.0;
 
   filter = c.createBiquadFilter();
   filter.type = "lowpass";
@@ -248,40 +264,36 @@ function ensureGraph(){
   distort.oversample = "4x";
 
   delay = c.createDelay(1.0);
-  delay.delayTime.value = 0.18;
+  delay.delayTime.value = 0.14;
 
   feedback = c.createGain();
-  feedback.gain.value = 0.25;
+  feedback.gain.value = 0.12;
 
-  // reverb
   convolver = c.createConvolver();
-  convolver.buffer = makeImpulse(1.7, 2.2);
+  convolver.buffer = makeImpulse(1.6, 2.2);
 
   reverbSend = c.createGain();
-  reverbSend.gain.value = 0.18;
+  reverbSend.gain.value = 0.10;
 
   wetGain = c.createGain();
-  wetGain.gain.value = 0.65;
-
-  // wiring:
-  // source -> dry -> master
-  // source -> fxIn -> filter -> distort -> delay -> wetGain -> master
-  // delay -> feedback -> delay (feedback loop)
-  // fxIn -> reverbSend -> convolver -> wetGain -> master
+  wetGain.gain.value = 0.0; // controlled by FX MIX
 
   // feedback loop
   delay.connect(feedback);
   feedback.connect(delay);
 
+  // FX chain
   fxIn.connect(filter);
   filter.connect(distort);
   distort.connect(delay);
   delay.connect(wetGain);
 
+  // Reverb
   fxIn.connect(reverbSend);
   reverbSend.connect(convolver);
   convolver.connect(wetGain);
 
+  // dry + wet to master
   dryGain.connect(master);
   wetGain.connect(master);
 
@@ -295,34 +307,51 @@ function syncFX(){
   filterLabel.textContent = (+filterAmt.value).toFixed(2);
   distLabel.textContent = (+distAmt.value).toFixed(2);
   reverbLabel.textContent = (+reverbAmt.value).toFixed(2);
+  mixLabel.textContent = (+mixAmt.value).toFixed(2);
 
   if(!master) return;
 
-  // Echo = feedback amount + delay mix effect strength
-  feedback.gain.value = +echoAmt.value * 0.65;
-
-  // Filter = lower the cutoff as slider increases
-  const amt = +filterAmt.value;
-  const minF = 600;      // deep lowpass
-  const maxF = 18000;    // almost open
-  filter.frequency.value = maxF - amt*(maxF-minF);
-
-  // Distortion curve
-  distort.curve = makeDistortionCurve(+distAmt.value);
-
-  // Reverb send
-  reverbSend.gain.value = +reverbAmt.value * 0.7;
-
-  // Key volume overall (master gain)
+  // overall key volume
   master.gain.value = Math.max(0.05, +keyVol.value);
+
+  // FX ON/OFF + MIX (main "not annoying" control)
+  const mix = fxEnabled ? (+mixAmt.value) : 0;
+  dryGain.gain.value = 1 - (mix * 0.85);
+  wetGain.gain.value = mix;
+
+  // Echo (safe cap so it never screams)
+  const e = +echoAmt.value;
+  delay.delayTime.value = 0.10 + e * 0.18;              // 0.10..0.28
+  feedback.gain.value  = Math.min(0.45, e * 0.55);      // hard cap
+
+  // Filter (gentle)
+  const f = +filterAmt.value;
+  const minF = 900;
+  const maxF = 18000;
+  filter.frequency.value = maxF - f * (maxF - minF);
+
+  // Distortion (soft)
+  const d = +distAmt.value;
+  distort.curve = makeDistortionCurve(d);
+
+  // Reverb (gentle)
+  const r = +reverbAmt.value;
+  reverbSend.gain.value = r * 0.45;
 }
 
+mixAmt.oninput = syncFX;
 echoAmt.oninput=syncFX;
 filterAmt.oninput=syncFX;
 distAmt.oninput=syncFX;
 reverbAmt.oninput=syncFX;
 
-/* Play sample assigned to a key */
+fxToggle.onclick = ()=>{
+  fxEnabled = !fxEnabled;
+  fxToggle.textContent = fxEnabled ? "FX: ON" : "FX: OFF";
+  syncFX();
+};
+
+/* Play sample on key */
 function playSampleForKey(key){
   const entry = sampleBank.get(key);
   if(!entry) return false;
@@ -332,7 +361,7 @@ function playSampleForKey(key){
   const src = c.createBufferSource();
   src.buffer = entry.buffer;
 
-  // route: src -> dry + fx
+  // route to dry + fx
   src.connect(dryGain);
   src.connect(fxIn);
 
@@ -340,7 +369,7 @@ function playSampleForKey(key){
   return true;
 }
 
-/* Play synth for key (random DJ-ish blip) */
+/* Play synth on key */
 function playSynth(){
   ensureGraph();
   const c = ac();
@@ -348,34 +377,35 @@ function playSynth(){
   const o = c.createOscillator();
   const g = c.createGain();
 
-  // a little punchy envelope
   const now = c.currentTime;
-  const base = 140 + Math.random()*900;
-  o.type = Math.random() > 0.5 ? "sawtooth" : "square";
+  const base = 180 + Math.random()*820;
+
+  o.type = Math.random() > 0.5 ? "sine" : "triangle";
   o.frequency.setValueAtTime(base, now);
-  o.frequency.exponentialRampToValueAtTime(base*0.6, now+0.10);
+  o.frequency.exponentialRampToValueAtTime(base*0.65, now+0.12);
 
   g.gain.setValueAtTime(0.001, now);
-  g.gain.exponentialRampToValueAtTime(0.35, now+0.01);
-  g.gain.exponentialRampToValueAtTime(0.001, now+0.14);
+  g.gain.exponentialRampToValueAtTime(0.40, now+0.012);
+  g.gain.exponentialRampToValueAtTime(0.001, now+0.16);
 
   o.connect(g);
 
-  // route through dry + fx
+  // route to dry + fx
   g.connect(dryGain);
   g.connect(fxIn);
 
   o.start(now);
-  o.stop(now+0.15);
+  o.stop(now+0.18);
 }
 
-/* Key handler */
+/* Keyboard */
 window.addEventListener("keydown", async (e)=>{
   const k = e.key.toUpperCase();
   if(!KEYS.has(k)) return;
   e.preventDefault();
 
   try{ await ac().resume(); }catch{}
+  ensureGraph();
 
   const mode = keyMode.value;
   let didSample = false;
@@ -384,14 +414,14 @@ window.addEventListener("keydown", async (e)=>{
     didSample = playSampleForKey(k);
   }
   if(mode === "synth" || mode === "both"){
-    // If sample exists, still add synth layer in BOTH mode
-    // If sample not found and mode is BOTH, synth still plays (nice fallback)
     playSynth();
   }
 
+  const sampleName = didSample ? sampleBank.get(k).name : "(no sample)";
+  statusEl.textContent = `Key ${k} → ${mode.toUpperCase()} | Sample: ${sampleName}`;
 },{passive:false});
 
-/* Load audio files -> decode -> map to keys */
+/* Load files -> decode -> map */
 async function loadFiles(fileList){
   const files = Array.from(fileList || []).filter(f => f.type.startsWith("audio/"));
   if(!files.length){
@@ -402,10 +432,8 @@ async function loadFiles(fileList){
   await ac().resume();
   ensureGraph();
 
-  // Clear previous
   sampleBank.clear();
 
-  // Decode in order and map to KEY_ORDER
   const c = ac();
   const max = Math.min(files.length, KEY_ORDER.length);
 
@@ -420,6 +448,7 @@ async function loadFiles(fileList){
   }
 
   renderBank();
+  statusEl.textContent = `Loaded ${sampleBank.size} samples. Press keys now.`;
 }
 
 function renderBank(){
@@ -446,9 +475,10 @@ sampleFolder.addEventListener("change", e => loadFiles(e.target.files));
 clearBank.onclick=()=>{
   sampleBank.clear();
   renderBank();
+  statusEl.textContent = "Sample bank cleared.";
 };
 
-/* VOLUMES (beat + labels) */
+/* Volumes */
 function syncVol(){
   beat.volume=+beatVol.value;
   beatVolLabel.textContent=(+beatVol.value).toFixed(2);
@@ -458,12 +488,12 @@ function syncVol(){
 beatVol.oninput=syncVol;
 keyVol.oninput=syncVol;
 syncVol();
-syncFX();
 
 /* BEAT */
 startBeat.onclick=async()=>{
   try{
     await ac().resume();
+    ensureGraph();
     beat.currentTime=0;
     await beat.play();
     startBeat.disabled=true; stopBeat.disabled=false;
@@ -478,11 +508,11 @@ stopBeat.onclick=()=>{
   statusEl.textContent="Status: stopped";
 };
 
-/* FX Buttons (simple like before) */
+/* FX Buttons */
 elvisBtn.onclick=async()=>{ try{await ac().resume(); elvis.currentTime=0; await elvis.play();}catch{} };
 boomBtn.onclick=async()=>{ try{await ac().resume(); boom.currentTime=0; await boom.play();}catch{} };
 
-/* RECORDER (same as your final) */
+/* RECORDER */
 const recBtn=document.getElementById("recBtn");
 const stopRecBtn=document.getElementById("stopRecBtn");
 const recStatus=document.getElementById("recStatus");
@@ -502,7 +532,7 @@ recBtn.onclick=async()=>{
     playback.src=url;
     download.href=url;
     download.download="mychillingtime-voice.webm";
-    download.style.display="inline-block";
+    download.style.display="block";
     recStatus.textContent="Recorder: saved";
     stream.getTracks().forEach(t=>t.stop());
   };
@@ -520,4 +550,3 @@ stopRecBtn.onclick=()=>{
 </script>
 </body>
 </html>
-
