@@ -3,130 +3,748 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DJ1 — Pads + Samples + Synth + FX</title>
+<title>MyChillingTime — DJ (Folder + Hosted) FINAL</title>
 
 <style>
-body{
-  margin:0;
-  padding:20px;
-  font-family:system-ui,Arial;
-  background:#0b0d12;
-  color:#eaeaff;
-}
-.wrap{max-width:1100px;margin:auto}
-h1{margin:0 0 10px}
-.card{
-  background:#141826;
-  border-radius:16px;
-  padding:14px;
-  margin:12px 0;
-}
-button{
-  padding:14px 18px;
-  border-radius:12px;
-  border:none;
-  font-weight:800;
-  cursor:pointer;
-}
-.primary{background:#fff;color:#000}
-.pads{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:10px;
-}
-.pad{
-  background:#222;
-  padding:18px;
-  border-radius:14px;
-  text-align:center;
-  font-weight:900;
-  user-select:none;
-}
-.pad:active{background:#444}
+body{margin:0;padding:20px;font-family:system-ui,Arial;background:#0b0d12;color:#eaeaff}
+.wrap{max-width:980px;margin:auto}
+h1{margin:0 0 6px}
+.muted{color:#aab3d6}
+.card{background:#141826;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px;margin:12px 0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.12);color:#fff;font-weight:800;cursor:pointer}
+button:hover{transform:translateY(-1px)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.primary{background:#fff;color:#0b0d12;border-color:transparent}
+.danger{background:rgba(255,77,77,.18);border-color:rgba(255,77,77,.35)}
+.pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.18);color:#c7cfef;font-size:13px}
+input[type="range"]{width:170px}
+kbd{display:inline-block;min-width:28px;text-align:center;padding:6px 8px;margin:2px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);font-weight:900}
+.status{margin-top:10px;font-size:13px;color:#aab3d6}
+.mono{font-family:ui-monospace,monospace}
+audio{width:100%}
+hr{border:none;border-top:1px solid rgba(255,255,255,.10);margin:12px 0}
+.list{display:grid;gap:8px}
+.track{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05)}
+.track .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:520px}
+.small{font-size:12px;color:#aab3d6}
+textarea{width:100%;min-height:92px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);color:#eaeaff;padding:10px}
+select{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:#fff;font-weight:800}
 </style>
 </head>
 
 <body>
-
-<!-- MOBILE AUDIO UNLOCK -->
-<button id="enableAudioBtn"
-style="
-position:fixed;
-top:20px;
-left:50%;
-transform:translateX(-50%);
-padding:16px 22px;
-font-size:16px;
-border-radius:12px;
-background:#1e90ff;
-color:white;
-z-index:9999;">
-🔊 TAP TO ENABLE AUDIO
-</button>
-
 <div class="wrap">
-  <h1>DJ1 — Mobile Test</h1>
+  <h1>MyChillingTime — DJ (Folder + Hosted) FINAL</h1>
+  <p class="muted">
+    Files in SAME folder:
+    <span class="mono">bott.mp3</span>,
+    <span class="mono">dj-elvis-dante.wav</span>,
+    <span class="mono">boom.wav</span>
+  </p>
 
+  <!-- BEAT -->
   <div class="card">
-    <button id="startBeat" class="primary">▶ Start Beat</button>
+    <div class="row">
+      <button id="startBeat" class="primary">▶ Start Beat</button>
+      <button id="stopBeat" class="danger" disabled>■ Stop Beat</button>
+
+      <span class="pill">
+        Beat Vol
+        <input id="beatVol" type="range" min="0" max="1" step="0.01" value="0.75">
+        <span id="beatVolLabel" class="mono">0.75</span>
+      </span>
+
+      <span class="pill">
+        Key Vol
+        <input id="keyVol" type="range" min="0" max="1" step="0.01" value="0.55">
+        <span id="keyVolLabel" class="mono">0.55</span>
+      </span>
+
+      <span class="pill">
+        FX Vol
+        <input id="fxVol" type="range" min="0" max="1" step="0.01" value="0.85">
+        <span id="fxVolLabel" class="mono">0.85</span>
+      </span>
+    </div>
+    <div class="status" id="status">Status: ready.</div>
+    <div class="small">Tip: browser blocks autoplay — click <b>Start Beat</b> first.</div>
   </div>
 
+  <!-- FX -->
   <div class="card">
-    <div class="pads" id="pads"></div>
+    <div class="row">
+      <button id="elvisBtn" class="primary">🎙️ ELVIS</button>
+      <button id="boomBtn">💥 BOOM</button>
+    </div>
   </div>
+
+  <!-- KEYS -->
+  <div class="card">
+    <p class="muted"><b>Keyboard (API)</b></p>
+    <kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd><kbd>G</kbd><kbd>H</kbd><kbd>J</kbd>
+    <kbd>K</kbd><kbd>L</kbd>
+    <kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd><kbd>R</kbd><kbd>T</kbd><kbd>Y</kbd><kbd>U</kbd><kbd>I</kbd><kbd>O</kbd><kbd>P</kbd>
+  </div>
+
+  <!-- DJ LOADER -->
+  <div class="card">
+    <div class="row">
+      <button id="initAudio" class="primary">⚡ Enable Audio (once)</button>
+
+      <!-- Folder loader -->
+      <button id="pickFolder">📁 Load Music Folder</button>
+      <input id="folderInput" type="file" multiple webkitdirectory style="display:none">
+
+      <!-- Hosted loader -->
+      <select id="sourceMode" title="Playlist source">
+        <option value="folder">Folder</option>
+        <option value="hosted">Hosted URLs</option>
+      </select>
+    </div>
+
+    <div id="hostedBox" style="display:none;margin-top:10px">
+      <div class="small" style="margin-bottom:8px">
+        Paste hosted MP3 links (one per line). Example: https://site.com/song.mp3
+      </div>
+      <textarea id="hostedUrls" placeholder="https://example.com/track1.mp3
+https://example.com/track2.mp3"></textarea>
+      <div class="row" style="margin-top:10px">
+        <button id="loadHosted" class="primary">Load Hosted Playlist</button>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+      <span class="pill">
+        Deck A Vol
+        <input id="deckAVol" type="range" min="0" max="1" step="0.01" value="0.85">
+        <span id="deckAVolLabel" class="mono">0.85</span>
+      </span>
+
+      <span class="pill">
+        Deck B Vol
+        <input id="deckBVol" type="range" min="0" max="1" step="0.01" value="0.85">
+        <span id="deckBVolLabel" class="mono">0.85</span>
+      </span>
+
+      <span class="pill">
+        Crossfader (A↔B)
+        <input id="xfade" type="range" min="0" max="1" step="0.01" value="0.50">
+        <span id="xfadeLabel" class="mono">0.50</span>
+      </span>
+    </div>
+
+    <div class="row" style="margin-top:10px">
+      <div style="flex:1;min-width:260px">
+        <div class="muted"><b>Deck A</b></div>
+        <div class="row" style="margin-top:6px">
+          <button id="aPlay" class="primary">▶ Play</button>
+          <button id="aStop" class="danger" disabled>■ Stop</button>
+          <button id="aPrev">⏮</button>
+          <button id="aNext">⏭</button>
+        </div>
+        <div class="status mono" id="aNow">A: (empty)</div>
+      </div>
+
+      <div style="flex:1;min-width:260px">
+        <div class="muted"><b>Deck B</b></div>
+        <div class="row" style="margin-top:6px">
+          <button id="bPlay" class="primary">▶ Play</button>
+          <button id="bStop" class="danger" disabled>■ Stop</button>
+          <button id="bPrev">⏮</button>
+          <button id="bNext">⏭</button>
+        </div>
+        <div class="status mono" id="bNow">B: (empty)</div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="muted"><b>Playlist</b> <span class="small">(Click “Send → Deck A/B”)</span></div>
+    <div class="status" id="playlistStatus">Playlist: none loaded.</div>
+    <div id="playlist" class="list"></div>
+  </div>
+
+  <!-- RECORDER (MASTER MIX) -->
+  <div class="card">
+    <div class="row">
+      <button id="recMixBtn" class="primary">⏺ Record MIX (everything)</button>
+      <button id="stopMixBtn" class="danger" disabled>⏹ Stop & Save MIX</button>
+
+      <span class="pill">
+        Mix Rec Format
+        <select id="mixFormat">
+          <option value="audio/webm;codecs=opus">WEBM (best)</option>
+          <option value="audio/webm">WEBM</option>
+        </select>
+      </span>
+    </div>
+    <div class="status" id="mixStatus">Mix Recorder: idle.</div>
+    <audio id="mixPlayback" controls></audio>
+    <a id="mixDownload" style="display:none;color:#9fffcf">⬇ Download MIX recording</a>
+
+    <hr>
+
+    <div class="muted"><b>Mic Recorder (your original)</b></div>
+    <div class="row" style="margin-top:8px">
+      <button id="recBtn" class="primary">⏺ Start Mic Recording</button>
+      <button id="stopRecBtn" class="danger" disabled>⏹ Stop & Save Mic</button>
+    </div>
+    <div class="status" id="recStatus">Mic Recorder: idle.</div>
+    <audio id="playback" controls></audio>
+    <a id="download" style="display:none;color:#9fffcf">⬇ Download mic recording</a>
+  </div>
+
 </div>
 
 <script>
-/* ===== AUDIO ENGINE ===== */
-let ctx;
+/* ---------------------------
+   FILES (same folder)
+---------------------------- */
+const BEAT_FILE="bott.mp3";
+const ELVIS_FILE="dj-elvis-dante.wav";
+const BOOM_FILE="boom.wav";
+
+/* ---------------------------
+   UI refs
+---------------------------- */
+const statusEl = document.getElementById("status");
+
+const startBeat = document.getElementById("startBeat");
+const stopBeat  = document.getElementById("stopBeat");
+
+const beatVol = document.getElementById("beatVol");
+const beatVolLabel = document.getElementById("beatVolLabel");
+
+const keyVol = document.getElementById("keyVol");
+const keyVolLabel = document.getElementById("keyVolLabel");
+
+const fxVol = document.getElementById("fxVol");
+const fxVolLabel = document.getElementById("fxVolLabel");
+
+const elvisBtn = document.getElementById("elvisBtn");
+const boomBtn  = document.getElementById("boomBtn");
+
+const initAudioBtn = document.getElementById("initAudio");
+
+const pickFolderBtn = document.getElementById("pickFolder");
+const folderInput = document.getElementById("folderInput");
+
+const sourceMode = document.getElementById("sourceMode");
+const hostedBox = document.getElementById("hostedBox");
+const hostedUrls = document.getElementById("hostedUrls");
+const loadHostedBtn = document.getElementById("loadHosted");
+
+const playlistEl = document.getElementById("playlist");
+const playlistStatus = document.getElementById("playlistStatus");
+
+const deckAVol = document.getElementById("deckAVol");
+const deckAVolLabel = document.getElementById("deckAVolLabel");
+const deckBVol = document.getElementById("deckBVol");
+const deckBVolLabel = document.getElementById("deckBVolLabel");
+
+const xfade = document.getElementById("xfade");
+const xfadeLabel = document.getElementById("xfadeLabel");
+
+const aPlay = document.getElementById("aPlay");
+const aStop = document.getElementById("aStop");
+const aPrev = document.getElementById("aPrev");
+const aNext = document.getElementById("aNext");
+const aNow  = document.getElementById("aNow");
+
+const bPlay = document.getElementById("bPlay");
+const bStop = document.getElementById("bStop");
+const bPrev = document.getElementById("bPrev");
+const bNext = document.getElementById("bNext");
+const bNow  = document.getElementById("bNow");
+
+/* Mix recorder UI */
+const recMixBtn = document.getElementById("recMixBtn");
+const stopMixBtn = document.getElementById("stopMixBtn");
+const mixStatus = document.getElementById("mixStatus");
+const mixPlayback = document.getElementById("mixPlayback");
+const mixDownload = document.getElementById("mixDownload");
+const mixFormat = document.getElementById("mixFormat");
+
+/* Mic recorder (original) */
+const recBtn = document.getElementById("recBtn");
+const stopRecBtn = document.getElementById("stopRecBtn");
+const recStatus = document.getElementById("recStatus");
+const playback = document.getElementById("playback");
+const download = document.getElementById("download");
+
+/* ---------------------------
+   HTML Audio elements
+---------------------------- */
+const beat  = new Audio(BEAT_FILE); beat.loop = true;
+const elvis = new Audio(ELVIS_FILE);
+const boom  = new Audio(BOOM_FILE);
+
+/* DJ decks (HTMLAudio for seeking/controls internally) */
+const deckA = new Audio(); deckA.crossOrigin="anonymous";
+const deckB = new Audio(); deckB.crossOrigin="anonymous";
+
+/* ---------------------------
+   Web Audio graph (for mixing + recording)
+---------------------------- */
+let ctx = null;
+
+let beatSrc, elvisSrc, boomSrc, aSrc, bSrc;
+
+let beatGain, fxGain, keyGain, aGain, bGain;
+let xfadeAGain, xfadeBGain;
+
+let masterGain;
+let mediaDest;           // MediaStreamDestination for mix recording
+
 function ac(){
-  if(!ctx){
-    ctx = new (window.AudioContext || window.webkitAudioContext)();
-  }
+  if(!ctx) ctx = new (window.AudioContext||window.webkitAudioContext)();
   return ctx;
 }
 
-/* ===== BEAT ===== */
-const beatEl = new Audio("bott.mp3");
-beatEl.loop = true;
+function initAudioGraph(){
+  const c = ac();
 
-/* ===== UNLOCK BUTTON ===== */
-const enableBtn = document.getElementById("enableAudioBtn");
-enableBtn.addEventListener("click", async ()=>{
-  await ac().resume();
-  enableBtn.style.display = "none";
-});
+  // Create nodes once
+  if(!masterGain){
+    masterGain = c.createGain();
+    masterGain.gain.value = 1;
 
-/* ===== START BEAT ===== */
-document.getElementById("startBeat").onclick = async ()=>{
+    mediaDest = c.createMediaStreamDestination();
+
+    // Create gains
+    beatGain = c.createGain();
+    fxGain   = c.createGain();
+    keyGain  = c.createGain();
+    aGain    = c.createGain();
+    bGain    = c.createGain();
+
+    xfadeAGain = c.createGain();
+    xfadeBGain = c.createGain();
+
+    // Connect: sources -> their gains
+    // -> deck gains -> xfade gains -> master -> destination + mediaDest
+    // -> other gains -> master
+    beatGain.connect(masterGain);
+    fxGain.connect(masterGain);
+    keyGain.connect(masterGain);
+
+    aGain.connect(xfadeAGain);
+    bGain.connect(xfadeBGain);
+
+    xfadeAGain.connect(masterGain);
+    xfadeBGain.connect(masterGain);
+
+    masterGain.connect(c.destination);
+    masterGain.connect(mediaDest);
+
+    // Create media element sources (ONLY ONCE per element)
+    beatSrc  = c.createMediaElementSource(beat);
+    elvisSrc = c.createMediaElementSource(elvis);
+    boomSrc  = c.createMediaElementSource(boom);
+    aSrc     = c.createMediaElementSource(deckA);
+    bSrc     = c.createMediaElementSource(deckB);
+
+    beatSrc.connect(beatGain);
+    elvisSrc.connect(fxGain);
+    boomSrc.connect(fxGain);
+    aSrc.connect(aGain);
+    bSrc.connect(bGain);
+
+    syncAllLevels();
+  }
+}
+
+async function enableAudio(){
+  initAudioGraph();
   await ac().resume();
-  beatEl.currentTime = 0;
-  await beatEl.play();
+  statusEl.textContent = "Status: audio enabled ✅";
+}
+
+/* ---------------------------
+   Keys (oscillator) -> keyGain
+---------------------------- */
+const KEYS = new Set("ASDFGHJKLQWERTYUIOP".split(""));
+function playKey(){
+  const c = ac();
+  initAudioGraph();
+
+  const o = c.createOscillator();
+  const g = c.createGain();
+  o.frequency.value = 220 + Math.random()*900;
+  g.gain.value = Number(keyVol.value) * 0.18;
+
+  o.connect(g);
+  g.connect(keyGain);
+
+  o.start();
+  o.stop(c.currentTime + 0.12);
+}
+
+window.addEventListener("keydown", e=>{
+  if(!KEYS.has(e.key.toUpperCase())) return;
+  e.preventDefault();
+  playKey();
+},{passive:false});
+
+/* ---------------------------
+   Volumes + Crossfader
+---------------------------- */
+function setCrossfader(v){
+  // Equal-power style curve (simple)
+  const x = Number(v);
+  const a = Math.cos(x * 0.5 * Math.PI);
+  const b = Math.sin(x * 0.5 * Math.PI);
+  xfadeAGain.gain.value = a;
+  xfadeBGain.gain.value = b;
+  xfadeLabel.textContent = x.toFixed(2);
+}
+
+function syncAllLevels(){
+  // Ensure graph exists before setting gains
+  initAudioGraph();
+
+  beatGain.gain.value = Number(beatVol.value);
+  fxGain.gain.value   = Number(fxVol.value);
+  // keyGain is handled per note via playKey gain, but we also keep a base scaler:
+  keyGain.gain.value  = Number(keyVol.value);
+
+  aGain.gain.value = Number(deckAVol.value);
+  bGain.gain.value = Number(deckBVol.value);
+
+  beatVolLabel.textContent = Number(beatVol.value).toFixed(2);
+  keyVolLabel.textContent  = Number(keyVol.value).toFixed(2);
+  fxVolLabel.textContent   = Number(fxVol.value).toFixed(2);
+
+  deckAVolLabel.textContent = Number(deckAVol.value).toFixed(2);
+  deckBVolLabel.textContent = Number(deckBVol.value).toFixed(2);
+
+  setCrossfader(xfade.value);
+}
+
+beatVol.oninput = syncAllLevels;
+keyVol.oninput  = syncAllLevels;
+fxVol.oninput   = syncAllLevels;
+deckAVol.oninput = syncAllLevels;
+deckBVol.oninput = syncAllLevels;
+xfade.oninput   = syncAllLevels;
+
+/* ---------------------------
+   Beat + FX (your original behavior)
+---------------------------- */
+startBeat.onclick = async()=>{
+  try{
+    await enableAudio();
+    beat.currentTime = 0;
+    await beat.play();
+    startBeat.disabled = true;
+    stopBeat.disabled = false;
+    statusEl.textContent = "Status: beat playing";
+  }catch{
+    statusEl.textContent = "❌ bott.mp3 missing (check filename + same folder)";
+  }
 };
 
-/* ===== PADS ===== */
-const KEYS = "ASDFGHJKL".split("");
-const padsEl = document.getElementById("pads");
+stopBeat.onclick = ()=>{
+  beat.pause(); beat.currentTime = 0;
+  startBeat.disabled = false;
+  stopBeat.disabled = true;
+  statusEl.textContent = "Status: stopped";
+};
 
-KEYS.forEach(k=>{
-  const pad = document.createElement("div");
-  pad.className = "pad";
-  pad.textContent = k;
-  pad.onclick = async ()=>{
-    await ac().resume();
-    const o = ac().createOscillator();
-    const g = ac().createGain();
-    o.frequency.value = 200 + Math.random()*800;
-    g.gain.value = 0.3;
-    o.connect(g);
-    g.connect(ac().destination);
-    o.start();
-    o.stop(ac().currentTime + 0.15);
-  };
-  padsEl.appendChild(pad);
+elvisBtn.onclick = async()=>{ try{ await enableAudio(); elvis.currentTime=0; await elvis.play(); }catch{} };
+boomBtn.onclick  = async()=>{ try{ await enableAudio(); boom.currentTime=0; await boom.play(); }catch{} };
+
+/* ---------------------------
+   DJ Playlist (Folder + Hosted)
+---------------------------- */
+let tracks = []; // {name, url, sourceType}
+let deckAIndex = -1;
+let deckBIndex = -1;
+
+function clearPlaylistUI(){
+  playlistEl.innerHTML = "";
+}
+
+function renderPlaylist(){
+  clearPlaylistUI();
+
+  if(!tracks.length){
+    playlistStatus.textContent = "Playlist: none loaded.";
+    return;
+  }
+
+  playlistStatus.textContent = `Playlist: ${tracks.length} track(s) loaded.`;
+
+  tracks.forEach((t, i)=>{
+    const row = document.createElement("div");
+    row.className = "track";
+
+    const left = document.createElement("div");
+    left.style.minWidth = "0";
+    left.innerHTML = `<div class="name mono">${i+1}. ${escapeHtml(t.name)}</div><div class="small">${t.sourceType}</div>`;
+
+    const right = document.createElement("div");
+    right.className = "row";
+
+    const toA = document.createElement("button");
+    toA.textContent = "Send → Deck A";
+    toA.onclick = ()=>loadToDeck("A", i);
+
+    const toB = document.createElement("button");
+    toB.textContent = "Send → Deck B";
+    toB.onclick = ()=>loadToDeck("B", i);
+
+    right.appendChild(toA);
+    right.appendChild(toB);
+
+    row.appendChild(left);
+    row.appendChild(right);
+
+    playlistEl.appendChild(row);
+  });
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[m]));
+}
+
+async function loadToDeck(which, index){
+  if(!tracks[index]) return;
+
+  await enableAudio();
+
+  const t = tracks[index];
+  const url = t.url;
+
+  if(which === "A"){
+    deckA.pause(); deckA.currentTime = 0;
+    deckA.src = url;
+    deckA.load();
+    deckAIndex = index;
+    aNow.textContent = `A: ${t.name}`;
+  }else{
+    deckB.pause(); deckB.currentTime = 0;
+    deckB.src = url;
+    deckB.load();
+    deckBIndex = index;
+    bNow.textContent = `B: ${t.name}`;
+  }
+
+  statusEl.textContent = `Status: loaded ${t.name} to Deck ${which}`;
+}
+
+function stepDeck(which, dir){
+  if(!tracks.length) return;
+
+  if(which === "A"){
+    if(deckAIndex < 0) deckAIndex = 0;
+    deckAIndex = (deckAIndex + dir + tracks.length) % tracks.length;
+    loadToDeck("A", deckAIndex);
+  }else{
+    if(deckBIndex < 0) deckBIndex = 0;
+    deckBIndex = (deckBIndex + dir + tracks.length) % tracks.length;
+    loadToDeck("B", deckBIndex);
+  }
+}
+
+/* Deck controls */
+aPlay.onclick = async()=>{
+  try{
+    await enableAudio();
+    if(!deckA.src){
+      if(tracks.length) await loadToDeck("A", 0);
+      else { statusEl.textContent="Load a folder or hosted playlist first."; return; }
+    }
+    await deckA.play();
+    aPlay.disabled = true;
+    aStop.disabled = false;
+  }catch{
+    statusEl.textContent = "Deck A play blocked. Click Enable Audio first.";
+  }
+};
+aStop.onclick = ()=>{
+  deckA.pause();
+  aPlay.disabled = false;
+  aStop.disabled = true;
+};
+aPrev.onclick = ()=>stepDeck("A", -1);
+aNext.onclick = ()=>stepDeck("A", +1);
+
+bPlay.onclick = async()=>{
+  try{
+    await enableAudio();
+    if(!deckB.src){
+      if(tracks.length) await loadToDeck("B", 0);
+      else { statusEl.textContent="Load a folder or hosted playlist first."; return; }
+    }
+    await deckB.play();
+    bPlay.disabled = true;
+    bStop.disabled = false;
+  }catch{
+    statusEl.textContent = "Deck B play blocked. Click Enable Audio first.";
+  }
+};
+bStop.onclick = ()=>{
+  deckB.pause();
+  bPlay.disabled = false;
+  bStop.disabled = true;
+};
+bPrev.onclick = ()=>stepDeck("B", -1);
+bNext.onclick = ()=>stepDeck("B", +1);
+
+/* Folder picker */
+pickFolderBtn.onclick = async()=>{
+  await enableAudio();
+  folderInput.click();
+};
+
+folderInput.addEventListener("change", ()=>{
+  const files = Array.from(folderInput.files || []);
+  const audioFiles = files.filter(f => /\.(mp3|wav|ogg|m4a)$/i.test(f.name));
+
+  // Convert to object URLs
+  tracks = audioFiles.map(f => ({
+    name: f.webkitRelativePath ? f.webkitRelativePath.split("/").pop() : f.name,
+    url: URL.createObjectURL(f),
+    sourceType: "folder"
+  }));
+
+  // Sort by name for clean playlist
+  tracks.sort((a,b)=>a.name.localeCompare(b.name));
+
+  deckAIndex = -1;
+  deckBIndex = -1;
+  aNow.textContent = "A: (empty)";
+  bNow.textContent = "B: (empty)";
+
+  renderPlaylist();
+  statusEl.textContent = tracks.length ? "Status: folder playlist ready ✅" : "Status: no audio files found in folder.";
 });
-</script>
 
+/* Hosted mode */
+sourceMode.onchange = ()=>{
+  hostedBox.style.display = (sourceMode.value === "hosted") ? "block" : "none";
+};
+
+loadHostedBtn.onclick = async()=>{
+  await enableAudio();
+  const lines = hostedUrls.value.split("\n").map(s=>s.trim()).filter(Boolean);
+  const urls = lines.filter(u=>/^https?:\/\//i.test(u));
+
+  tracks = urls.map((u, idx)=>({
+    name: `Hosted Track ${idx+1}`,
+    url: u,
+    sourceType: "hosted"
+  }));
+
+  deckAIndex = -1;
+  deckBIndex = -1;
+  aNow.textContent = "A: (empty)";
+  bNow.textContent = "B: (empty)";
+
+  renderPlaylist();
+  statusEl.textContent = tracks.length ? "Status: hosted playlist ready ✅" : "Status: no valid hosted URLs found.";
+};
+
+/* Enable Audio button */
+initAudioBtn.onclick = async()=>{
+  await enableAudio();
+};
+
+/* ---------------------------
+   MIX Recorder (records MASTER mix)
+---------------------------- */
+let mixRec = null;
+let mixChunks = [];
+
+recMixBtn.onclick = async()=>{
+  await enableAudio();
+
+  // Use the master mixed stream
+  const stream = mediaDest.stream;
+
+  // Pick mime type if supported
+  let mime = mixFormat.value;
+  if(!MediaRecorder.isTypeSupported(mime)){
+    mime = "audio/webm";
+  }
+
+  mixChunks = [];
+  mixRec = new MediaRecorder(stream, { mimeType: mime });
+
+  mixRec.ondataavailable = e => { if(e.data && e.data.size) mixChunks.push(e.data); };
+  mixRec.onstop = ()=>{
+    const blob = new Blob(mixChunks, { type: mime });
+    const url = URL.createObjectURL(blob);
+    mixPlayback.src = url;
+    mixDownload.href = url;
+    mixDownload.download = "mychillingtime-MIX.webm";
+    mixDownload.style.display = "block";
+    mixStatus.textContent = "Mix Recorder: saved ✅";
+  };
+
+  mixRec.start();
+  recMixBtn.disabled = true;
+  stopMixBtn.disabled = false;
+  mixStatus.textContent = "Mix Recorder: recording…";
+};
+
+stopMixBtn.onclick = ()=>{
+  if(mixRec && mixRec.state !== "inactive"){
+    mixRec.stop();
+  }
+  recMixBtn.disabled = false;
+  stopMixBtn.disabled = true;
+};
+
+/* ---------------------------
+   Mic Recorder (your original)
+---------------------------- */
+let rec, chunks=[], micStream;
+
+recBtn.onclick = async()=>{
+  micStream = await navigator.mediaDevices.getUserMedia({audio:true});
+  rec = new MediaRecorder(micStream);
+  chunks = [];
+  rec.ondataavailable = e => chunks.push(e.data);
+  rec.onstop = ()=>{
+    const blob = new Blob(chunks,{type:"audio/webm"});
+    const url = URL.createObjectURL(blob);
+    playback.src = url;
+    download.href = url;
+    download.download = "mychillingtime-mic.webm";
+    download.style.display = "block";
+    recStatus.textContent = "Mic Recorder: saved ✅";
+    micStream.getTracks().forEach(t=>t.stop());
+  };
+  rec.start();
+  recBtn.disabled = true;
+  stopRecBtn.disabled = false;
+  recStatus.textContent = "Mic Recorder: recording…";
+};
+
+stopRecBtn.onclick = ()=>{
+  rec.stop();
+  recBtn.disabled = false;
+  stopRecBtn.disabled = true;
+};
+
+/* Start with labels synced */
+(function boot(){
+  // Create audio graph only after user gesture; but labels can show now
+  beatVolLabel.textContent = Number(beatVol.value).toFixed(2);
+  keyVolLabel.textContent  = Number(keyVol.value).toFixed(2);
+  fxVolLabel.textContent   = Number(fxVol.value).toFixed(2);
+  deckAVolLabel.textContent= Number(deckAVol.value).toFixed(2);
+  deckBVolLabel.textContent= Number(deckBVol.value).toFixed(2);
+  xfadeLabel.textContent   = Number(xfade.value).toFixed(2);
+})();
+</script>
 </body>
 </html>
 
