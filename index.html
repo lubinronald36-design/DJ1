@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MyChillingTime — FINAL</title>
+<title>MyChillingTime — UPGRADED (Samples + Synth + FX)</title>
 
 <style>
 body{margin:0;padding:20px;font-family:system-ui,Arial;background:#0b0d12;color:#eaeaff}
-.wrap{max-width:900px;margin:auto}
+.wrap{max-width:980px;margin:auto}
 h1{margin:0 0 6px}
 .muted{color:#aab3d6}
 .card{background:#141826;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px;margin:12px 0}
@@ -19,21 +19,23 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .danger{background:rgba(255,77,77,.18);border-color:rgba(255,77,77,.35)}
 .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.18);color:#c7cfef;font-size:13px}
 input[type="range"]{width:160px}
+select{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:#fff;font-weight:800}
 kbd{display:inline-block;min-width:28px;text-align:center;padding:6px 8px;margin:2px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);font-weight:900}
 .status{margin-top:10px;font-size:13px;color:#aab3d6}
 .mono{font-family:ui-monospace,monospace}
 audio{width:100%}
+.small{font-size:12px;color:#aab3d6}
+.list{margin-top:10px;font-size:12px;line-height:1.35;color:#c7cfef}
+.list b{color:#fff}
+a{color:#9fffcf}
 </style>
 </head>
 
 <body>
 <div class="wrap">
-<h1>MyChillingTime — FINAL</h1>
+<h1>MyChillingTime — UPGRADED</h1>
 <p class="muted">
-Files in SAME folder:
-<span class="mono">bott.mp3</span>,
-<span class="mono">dj-elvis-dante.wav</span>,
-<span class="mono">boom.wav</span>
+Repo files (same folder): <span class="mono">bott.mp3</span>, <span class="mono">dj-elvis-dante.wav</span>, <span class="mono">boom.wav</span>
 </p>
 
 <!-- BEAT -->
@@ -50,11 +52,40 @@ Files in SAME folder:
 
     <span class="pill">
       Key Vol
-      <input id="keyVol" type="range" min="0" max="1" step="0.01" value="0.55">
-      <span id="keyVolLabel" class="mono">0.55</span>
+      <input id="keyVol" type="range" min="0" max="1" step="0.01" value="0.65">
+      <span id="keyVolLabel" class="mono">0.65</span>
     </span>
   </div>
   <div class="status" id="status">Status: ready.</div>
+</div>
+
+<!-- LOAD SOUNDS + MODE -->
+<div class="card">
+  <div class="row">
+    <label class="pill" style="cursor:pointer">
+      🎚️ Load key samples (multi-files)
+      <input id="sampleFiles" type="file" accept="audio/*" multiple style="display:none">
+    </label>
+
+    <label class="pill" style="cursor:pointer">
+      📁 Load a folder (desktop Chrome)
+      <input id="sampleFolder" type="file" accept="audio/*" multiple webkitdirectory style="display:none">
+    </label>
+
+    <select id="keyMode" title="How keys play">
+      <option value="both" selected>Keys: BOTH (Samples + Synth)</option>
+      <option value="samples">Keys: Samples only</option>
+      <option value="synth">Keys: Synth only</option>
+    </select>
+
+    <button id="clearBank" class="danger">Clear Bank</button>
+  </div>
+
+  <div class="small">
+    Keys auto-map in order to: <b>ASDFGHJKL</b> then <b>QWERTYUIOP</b>. If you load 5 sounds, only first 5 keys get samples.
+  </div>
+
+  <div class="list" id="bankList"><b>Sample Bank:</b> (none loaded yet)</div>
 </div>
 
 <!-- FX -->
@@ -62,15 +93,43 @@ Files in SAME folder:
   <div class="row">
     <button id="elvisBtn" class="primary">🎙️ ELVIS</button>
     <button id="boomBtn">💥 BOOM</button>
+
+    <span class="pill">
+      FX Echo
+      <input id="echoAmt" type="range" min="0" max="1" step="0.01" value="0.25">
+      <span id="echoLabel" class="mono">0.25</span>
+    </span>
+
+    <span class="pill">
+      Filter
+      <input id="filterAmt" type="range" min="0" max="1" step="0.01" value="0.15">
+      <span id="filterLabel" class="mono">0.15</span>
+    </span>
+
+    <span class="pill">
+      Distort
+      <input id="distAmt" type="range" min="0" max="1" step="0.01" value="0.10">
+      <span id="distLabel" class="mono">0.10</span>
+    </span>
+
+    <span class="pill">
+      Reverb
+      <input id="reverbAmt" type="range" min="0" max="1" step="0.01" value="0.18">
+      <span id="reverbLabel" class="mono">0.18</span>
+    </span>
   </div>
+  <div class="small">FX apply to <b>KEYS</b> (samples + synth). Beat/ELVIS/BOOM stay simple like before.</div>
 </div>
 
 <!-- KEYS -->
 <div class="card">
-  <p class="muted"><b>Keyboard (API)</b></p>
-  <kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd><kbd>G</kbd><kbd>H</kbd><kbd>J</kbd>
-  <kbd>K</kbd><kbd>L</kbd>
-  <kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd><kbd>R</kbd><kbd>T</kbd><kbd>Y</kbd><kbd>U</kbd><kbd>I</kbd><kbd>O</kbd><kbd>P</kbd>
+  <p class="muted"><b>Keyboard</b> (press keys)</p>
+  <div>
+    <kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd><kbd>G</kbd><kbd>H</kbd><kbd>J</kbd><kbd>K</kbd><kbd>L</kbd>
+  </div>
+  <div style="margin-top:6px">
+    <kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd><kbd>R</kbd><kbd>T</kbd><kbd>Y</kbd><kbd>U</kbd><kbd>I</kbd><kbd>O</kbd><kbd>P</kbd>
+  </div>
 </div>
 
 <!-- RECORDER -->
@@ -81,12 +140,14 @@ Files in SAME folder:
   </div>
   <div class="status" id="recStatus">Recorder: idle.</div>
   <audio id="playback" controls></audio>
-  <a id="download" style="display:none;color:#9fffcf">⬇ Download recording</a>
+  <a id="download" style="display:none">⬇ Download recording</a>
+  <div class="small">Note: mic recording needs HTTPS (GitHub Pages is fine).</div>
 </div>
+
 </div>
 
 <script>
-/* FILES */
+/* FILES (from your current build) */
 const BEAT_FILE="bott.mp3";
 const ELVIS_FILE="dj-elvis-dante.wav";
 const BOOM_FILE="boom.wav";
@@ -101,41 +162,308 @@ const keyVol=document.getElementById("keyVol");
 const keyVolLabel=document.getElementById("keyVolLabel");
 const elvisBtn=document.getElementById("elvisBtn");
 const boomBtn=document.getElementById("boomBtn");
+const sampleFiles=document.getElementById("sampleFiles");
+const sampleFolder=document.getElementById("sampleFolder");
+const bankList=document.getElementById("bankList");
+const keyMode=document.getElementById("keyMode");
+const clearBank=document.getElementById("clearBank");
 
-/* AUDIO */
+const echoAmt=document.getElementById("echoAmt");
+const filterAmt=document.getElementById("filterAmt");
+const distAmt=document.getElementById("distAmt");
+const reverbAmt=document.getElementById("reverbAmt");
+const echoLabel=document.getElementById("echoLabel");
+const filterLabel=document.getElementById("filterLabel");
+const distLabel=document.getElementById("distLabel");
+const reverbLabel=document.getElementById("reverbLabel");
+
+/* SIMPLE AUDIO (beat + buttons) */
 const beat=new Audio(BEAT_FILE); beat.loop=true;
 const elvis=new Audio(ELVIS_FILE);
 const boom=new Audio(BOOM_FILE);
 
-/* WEB AUDIO KEYS */
+/* WEB AUDIO CORE */
 let ctx;
-function ac(){ if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)(); return ctx;}
-function playKey(){
-  const o=ac().createOscillator();
-  const g=ac().createGain();
-  o.frequency.value=220+Math.random()*900;
-  g.gain.value=keyVol.value*0.18;
-  o.connect(g); g.connect(ac().destination);
-  o.start(); o.stop(ac().currentTime+0.12);
+function ac(){
+  if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)();
+  return ctx;
 }
-const KEYS=new Set("ASDFGHJKLQWERTYUIOP".split(""));
-window.addEventListener("keydown",e=>{
-  if(!KEYS.has(e.key.toUpperCase()))return;
-  e.preventDefault(); playKey();
+
+/* ===== KEY ENGINE (Samples + Synth + FX) ===== */
+const KEY_ORDER = "ASDFGHJKLQWERTYUIOP".split("");
+const KEYS = new Set(KEY_ORDER);
+
+/* Sample Bank: key -> AudioBuffer */
+const sampleBank = new Map(); // key => {name, buffer}
+
+/* FX Nodes */
+let master, dryGain, fxIn, filter, delay, feedback, reverbSend, convolver, distort, wetGain;
+
+/* Create a tiny impulse for reverb (no external file) */
+function makeImpulse(seconds=1.5, decay=2.5){
+  const c = ac();
+  const rate = c.sampleRate;
+  const length = Math.floor(rate * seconds);
+  const impulse = c.createBuffer(2, length, rate);
+  for(let ch=0; ch<2; ch++){
+    const data = impulse.getChannelData(ch);
+    for(let i=0;i<length;i++){
+      data[i]=(Math.random()*2-1)*Math.pow(1 - i/length, decay);
+    }
+  }
+  return impulse;
+}
+
+function makeDistortionCurve(amount){
+  const k = amount*600;
+  const n = 44100;
+  const curve = new Float32Array(n);
+  const deg = Math.PI / 180;
+  for(let i=0;i<n;i++){
+    const x = (i*2/n) - 1;
+    curve[i] = (3+k)*x*20*deg / (Math.PI + k*Math.abs(x));
+  }
+  return curve;
+}
+
+function ensureGraph(){
+  const c = ac();
+  if(master) return;
+
+  master = c.createGain();
+  master.gain.value = 0.8;
+
+  // dry path
+  dryGain = c.createGain(); dryGain.gain.value = 1.0;
+
+  // fx chain
+  fxIn = c.createGain();
+
+  filter = c.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = 18000;
+
+  distort = c.createWaveShaper();
+  distort.curve = makeDistortionCurve(0);
+  distort.oversample = "4x";
+
+  delay = c.createDelay(1.0);
+  delay.delayTime.value = 0.18;
+
+  feedback = c.createGain();
+  feedback.gain.value = 0.25;
+
+  // reverb
+  convolver = c.createConvolver();
+  convolver.buffer = makeImpulse(1.7, 2.2);
+
+  reverbSend = c.createGain();
+  reverbSend.gain.value = 0.18;
+
+  wetGain = c.createGain();
+  wetGain.gain.value = 0.65;
+
+  // wiring:
+  // source -> dry -> master
+  // source -> fxIn -> filter -> distort -> delay -> wetGain -> master
+  // delay -> feedback -> delay (feedback loop)
+  // fxIn -> reverbSend -> convolver -> wetGain -> master
+
+  // feedback loop
+  delay.connect(feedback);
+  feedback.connect(delay);
+
+  fxIn.connect(filter);
+  filter.connect(distort);
+  distort.connect(delay);
+  delay.connect(wetGain);
+
+  fxIn.connect(reverbSend);
+  reverbSend.connect(convolver);
+  convolver.connect(wetGain);
+
+  dryGain.connect(master);
+  wetGain.connect(master);
+
+  master.connect(c.destination);
+
+  syncFX();
+}
+
+function syncFX(){
+  echoLabel.textContent = (+echoAmt.value).toFixed(2);
+  filterLabel.textContent = (+filterAmt.value).toFixed(2);
+  distLabel.textContent = (+distAmt.value).toFixed(2);
+  reverbLabel.textContent = (+reverbAmt.value).toFixed(2);
+
+  if(!master) return;
+
+  // Echo = feedback amount + delay mix effect strength
+  feedback.gain.value = +echoAmt.value * 0.65;
+
+  // Filter = lower the cutoff as slider increases
+  const amt = +filterAmt.value;
+  const minF = 600;      // deep lowpass
+  const maxF = 18000;    // almost open
+  filter.frequency.value = maxF - amt*(maxF-minF);
+
+  // Distortion curve
+  distort.curve = makeDistortionCurve(+distAmt.value);
+
+  // Reverb send
+  reverbSend.gain.value = +reverbAmt.value * 0.7;
+
+  // Key volume overall (master gain)
+  master.gain.value = Math.max(0.05, +keyVol.value);
+}
+
+echoAmt.oninput=syncFX;
+filterAmt.oninput=syncFX;
+distAmt.oninput=syncFX;
+reverbAmt.oninput=syncFX;
+
+/* Play sample assigned to a key */
+function playSampleForKey(key){
+  const entry = sampleBank.get(key);
+  if(!entry) return false;
+
+  ensureGraph();
+  const c = ac();
+  const src = c.createBufferSource();
+  src.buffer = entry.buffer;
+
+  // route: src -> dry + fx
+  src.connect(dryGain);
+  src.connect(fxIn);
+
+  src.start();
+  return true;
+}
+
+/* Play synth for key (random DJ-ish blip) */
+function playSynth(){
+  ensureGraph();
+  const c = ac();
+
+  const o = c.createOscillator();
+  const g = c.createGain();
+
+  // a little punchy envelope
+  const now = c.currentTime;
+  const base = 140 + Math.random()*900;
+  o.type = Math.random() > 0.5 ? "sawtooth" : "square";
+  o.frequency.setValueAtTime(base, now);
+  o.frequency.exponentialRampToValueAtTime(base*0.6, now+0.10);
+
+  g.gain.setValueAtTime(0.001, now);
+  g.gain.exponentialRampToValueAtTime(0.35, now+0.01);
+  g.gain.exponentialRampToValueAtTime(0.001, now+0.14);
+
+  o.connect(g);
+
+  // route through dry + fx
+  g.connect(dryGain);
+  g.connect(fxIn);
+
+  o.start(now);
+  o.stop(now+0.15);
+}
+
+/* Key handler */
+window.addEventListener("keydown", async (e)=>{
+  const k = e.key.toUpperCase();
+  if(!KEYS.has(k)) return;
+  e.preventDefault();
+
+  try{ await ac().resume(); }catch{}
+
+  const mode = keyMode.value;
+  let didSample = false;
+
+  if(mode === "samples" || mode === "both"){
+    didSample = playSampleForKey(k);
+  }
+  if(mode === "synth" || mode === "both"){
+    // If sample exists, still add synth layer in BOTH mode
+    // If sample not found and mode is BOTH, synth still plays (nice fallback)
+    playSynth();
+  }
+
 },{passive:false});
 
-/* VOLUMES */
-function sync(){
-  beat.volume=beatVol.value;
-  beatVolLabel.textContent=beatVol.value;
-  keyVolLabel.textContent=keyVol.value;
+/* Load audio files -> decode -> map to keys */
+async function loadFiles(fileList){
+  const files = Array.from(fileList || []).filter(f => f.type.startsWith("audio/"));
+  if(!files.length){
+    bankList.innerHTML = "<b>Sample Bank:</b> (no audio files selected)";
+    return;
+  }
+
+  await ac().resume();
+  ensureGraph();
+
+  // Clear previous
+  sampleBank.clear();
+
+  // Decode in order and map to KEY_ORDER
+  const c = ac();
+  const max = Math.min(files.length, KEY_ORDER.length);
+
+  bankList.innerHTML = "<b>Sample Bank:</b><br>Loading…";
+
+  for(let i=0;i<max;i++){
+    const file = files[i];
+    const arr = await file.arrayBuffer();
+    const buf = await c.decodeAudioData(arr);
+    const key = KEY_ORDER[i];
+    sampleBank.set(key, { name: file.name, buffer: buf });
+  }
+
+  renderBank();
 }
-beatVol.oninput=sync; keyVol.oninput=sync; sync();
+
+function renderBank(){
+  if(sampleBank.size === 0){
+    bankList.innerHTML = "<b>Sample Bank:</b> (none loaded yet)";
+    return;
+  }
+  let html = "<b>Sample Bank:</b><br>";
+  for(const key of KEY_ORDER){
+    if(sampleBank.has(key)){
+      html += `<span class="mono">${key}</span> → ${escapeHtml(sampleBank.get(key).name)}<br>`;
+    }
+  }
+  bankList.innerHTML = html;
+}
+
+function escapeHtml(s){
+  return (s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+sampleFiles.addEventListener("change", e => loadFiles(e.target.files));
+sampleFolder.addEventListener("change", e => loadFiles(e.target.files));
+
+clearBank.onclick=()=>{
+  sampleBank.clear();
+  renderBank();
+};
+
+/* VOLUMES (beat + labels) */
+function syncVol(){
+  beat.volume=+beatVol.value;
+  beatVolLabel.textContent=(+beatVol.value).toFixed(2);
+  keyVolLabel.textContent=(+keyVol.value).toFixed(2);
+  syncFX();
+}
+beatVol.oninput=syncVol;
+keyVol.oninput=syncVol;
+syncVol();
+syncFX();
 
 /* BEAT */
 startBeat.onclick=async()=>{
   try{
-    ac().resume();
+    await ac().resume();
     beat.currentTime=0;
     await beat.play();
     startBeat.disabled=true; stopBeat.disabled=false;
@@ -150,63 +478,41 @@ stopBeat.onclick=()=>{
   statusEl.textContent="Status: stopped";
 };
 
-/* FX */
-elvisBtn.onclick=async()=>{ try{ac().resume(); elvis.currentTime=0; await elvis.play();}catch{} };
-boomBtn.onclick=async()=>{ try{ac().resume(); boom.currentTime=0; await boom.play();}catch{} };
+/* FX Buttons (simple like before) */
+elvisBtn.onclick=async()=>{ try{await ac().resume(); elvis.currentTime=0; await elvis.play();}catch{} };
+boomBtn.onclick=async()=>{ try{await ac().resume(); boom.currentTime=0; await boom.play();}catch{} };
 
-/* RECORDER */
+/* RECORDER (same as your final) */
 const recBtn=document.getElementById("recBtn");
 const stopRecBtn=document.getElementById("stopRecBtn");
 const recStatus=document.getElementById("recStatus");
 const playback=document.getElementById("playback");
 const download=document.getElementById("download");
 
-let rec=null, chunks=[], stream=null;
+let rec, chunks=[], stream;
 
 recBtn.onclick=async()=>{
-  // FIX #1: mic permission safe
-  try{
-    stream = await navigator.mediaDevices.getUserMedia({audio:true});
-  }catch(e){
-    recStatus.textContent = "❌ Recorder: mic blocked / no permission";
-    return;
-  }
-
-  rec = new MediaRecorder(stream);
-  chunks = [];
-
-  rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
-
-  rec.onstop = ()=>{
-    const blob = new Blob(chunks,{type:"audio/webm"});
-    const url = URL.createObjectURL(blob);
-    playback.src = url;
-
-    download.href = url;
-    download.download = "mychillingtime-voice.webm";
-    download.style.display = "block";
-
-    recStatus.textContent = "Recorder: saved";
-
-    if(stream) stream.getTracks().forEach(t=>t.stop());
-    stream = null;
-    rec = null;
+  stream=await navigator.mediaDevices.getUserMedia({audio:true});
+  rec=new MediaRecorder(stream);
+  chunks=[];
+  rec.ondataavailable=e=>chunks.push(e.data);
+  rec.onstop=()=>{
+    const blob=new Blob(chunks,{type:"audio/webm"});
+    const url=URL.createObjectURL(blob);
+    playback.src=url;
+    download.href=url;
+    download.download="mychillingtime-voice.webm";
+    download.style.display="inline-block";
+    recStatus.textContent="Recorder: saved";
+    stream.getTracks().forEach(t=>t.stop());
   };
-
   rec.start();
-  recBtn.disabled = true;
-  stopRecBtn.disabled = false;
-  recStatus.textContent = "Recorder: recording…";
+  recBtn.disabled=true;
+  stopRecBtn.disabled=false;
+  recStatus.textContent="Recorder: recording…";
 };
 
 stopRecBtn.onclick=()=>{
-  // FIX #2: stop safe
-  if(!rec){
-    recStatus.textContent="Recorder: idle.";
-    stopRecBtn.disabled=true;
-    recBtn.disabled=false;
-    return;
-  }
   rec.stop();
   recBtn.disabled=false;
   stopRecBtn.disabled=true;
