@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MyChillingTime — UPGRADED (BOTH + FX FIX)</title>
+<title>DJ1 — Pads + Samples + Synth + FX (FULL)</title>
 
 <style>
 body{margin:0;padding:20px;font-family:system-ui,Arial;background:#0b0d12;color:#eaeaff}
-.wrap{max-width:980px;margin:auto}
+.wrap{max-width:1100px;margin:auto}
 h1{margin:0 0 6px}
 .muted{color:#aab3d6}
 .card{background:#141826;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px;margin:12px 0}
@@ -20,25 +20,54 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.18);color:#c7cfef;font-size:13px}
 input[type="range"]{width:160px}
 select{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:#fff;font-weight:800}
-kbd{display:inline-block;min-width:28px;text-align:center;padding:6px 8px;margin:2px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);font-weight:900}
 .status{margin-top:10px;font-size:13px;color:#aab3d6}
 .mono{font-family:ui-monospace,monospace}
 audio{width:100%}
 .small{font-size:12px;color:#aab3d6}
-.list{margin-top:10px;font-size:12px;line-height:1.35;color:#c7cfef}
-.list b{color:#fff}
 a{color:#9fffcf}
+
+/* PADS */
+.pads{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+@media (max-width:880px){ .pads{grid-template-columns:repeat(4,minmax(0,1fr));} }
+@media (max-width:520px){ .pads{grid-template-columns:repeat(3,minmax(0,1fr));} }
+
+.pad{
+  user-select:none;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  padding:12px;
+  min-height:72px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  cursor:pointer;
+  transition:transform .06s ease;
+}
+.pad:active{transform:scale(.98)}
+.pad.on{
+  outline:2px solid rgba(159,255,207,.55);
+  background:rgba(159,255,207,.10);
+}
+.padTop{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.padKey{font-weight:1000;font-size:18px}
+.padMode{font-size:11px;color:#aab3d6}
+.padName{font-size:12px;color:#c7cfef;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ASSIGNMENT LIST */
+.assignGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:880px){ .assignGrid{grid-template-columns:1fr} }
+.assignRow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.assignRow .k{min-width:40px;text-align:center;font-weight:1000;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px 10px;background:rgba(255,255,255,.07)}
+.assignRow select{flex:1;min-width:220px}
 </style>
 </head>
 
 <body>
 <div class="wrap">
-<h1>MyChillingTime — UPGRADED</h1>
+<h1>DJ1 — Pads + Samples + Synth + FX</h1>
 <p class="muted">
-Files in SAME folder:
-<span class="mono">bott.mp3</span>,
-<span class="mono">dj-elvis-dante.wav</span>,
-<span class="mono">boom.wav</span>
+Repo files (same folder): <span class="mono">bott.mp3</span>, <span class="mono">dj-elvis-dante.wav</span>, <span class="mono">boom.wav</span>
 </p>
 
 <!-- BEAT -->
@@ -57,6 +86,12 @@ Files in SAME folder:
       Key Vol
       <input id="keyVol" type="range" min="0" max="1" step="0.01" value="0.65">
       <span id="keyVolLabel" class="mono">0.65</span>
+    </span>
+
+    <span class="pill">
+      Synth Level
+      <input id="synthAmt" type="range" min="0" max="1" step="0.01" value="0.35">
+      <span id="synthLabel" class="mono">0.35</span>
     </span>
   </div>
   <div class="status" id="status">Status: ready.</div>
@@ -82,13 +117,14 @@ Files in SAME folder:
     </select>
 
     <button id="clearBank" class="danger">Clear Bank</button>
+    <button id="resetAssign" class="danger">Reset Assign</button>
   </div>
 
   <div class="small">
-    Keys auto-map in order to: <b>ASDFGHJKL</b> then <b>QWERTYUIOP</b>.
+    You can <b>assign any sample to any key</b> below. Assignments auto-save in your browser.
   </div>
 
-  <div class="list" id="bankList"><b>Sample Bank:</b> (none loaded yet)</div>
+  <div class="status" id="bankStatus">Sample Bank: none loaded yet.</div>
 </div>
 
 <!-- FX (FIXED: ON/OFF + MIX + SOFT DISTORTION + SAFE ECHO) -->
@@ -135,12 +171,24 @@ Files in SAME folder:
   </div>
 </div>
 
-<!-- KEYS -->
+<!-- PADS -->
 <div class="card">
-  <p class="muted"><b>Keyboard</b> (press keys)</p>
-  <kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd><kbd>G</kbd><kbd>H</kbd><kbd>J</kbd>
-  <kbd>K</kbd><kbd>L</kbd>
-  <kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd><kbd>R</kbd><kbd>T</kbd><kbd>Y</kbd><kbd>U</kbd><kbd>I</kbd><kbd>O</kbd><kbd>P</kbd>
+  <div class="row" style="justify-content:space-between;align-items:flex-end">
+    <div>
+      <div class="muted"><b>DJ Pads</b> (tap or press keyboard)</div>
+      <div class="small">Keys: ASDFGHJKL + QWERTYUIOP</div>
+    </div>
+    <div class="small">Tip: mobile users can play by tapping pads.</div>
+  </div>
+
+  <div id="pads" class="pads" style="margin-top:10px"></div>
+</div>
+
+<!-- ASSIGNMENT -->
+<div class="card">
+  <div class="muted"><b>Assign samples to keys</b></div>
+  <div class="small">Pick a sample for each key. Saved automatically.</div>
+  <div id="assignments" class="assignGrid" style="margin-top:10px"></div>
 </div>
 
 <!-- RECORDER -->
@@ -151,9 +199,10 @@ Files in SAME folder:
   </div>
   <div class="status" id="recStatus">Recorder: idle.</div>
   <audio id="playback" controls></audio>
-  <a id="download" style="display:none;color:#9fffcf">⬇ Download recording</a>
+  <a id="download" style="display:none">⬇ Download recording</a>
   <div class="small">Note: mic recording needs HTTPS (GitHub Pages is fine).</div>
 </div>
+
 </div>
 
 <script>
@@ -162,22 +211,35 @@ const BEAT_FILE="bott.mp3";
 const ELVIS_FILE="dj-elvis-dante.wav";
 const BOOM_FILE="boom.wav";
 
+/* KEYS */
+const KEY_ORDER = "ASDFGHJKLQWERTYUIOP".split("");
+const KEYS = new Set(KEY_ORDER);
+
+/* STORAGE */
+const STORAGE_KEY = "dj1_assignments_v1";
+
 /* UI */
 const statusEl=document.getElementById("status");
+const bankStatus=document.getElementById("bankStatus");
+
 const startBeat=document.getElementById("startBeat");
 const stopBeat=document.getElementById("stopBeat");
 const beatVol=document.getElementById("beatVol");
 const beatVolLabel=document.getElementById("beatVolLabel");
 const keyVol=document.getElementById("keyVol");
 const keyVolLabel=document.getElementById("keyVolLabel");
+
+const synthAmt=document.getElementById("synthAmt");
+const synthLabel=document.getElementById("synthLabel");
+
 const elvisBtn=document.getElementById("elvisBtn");
 const boomBtn=document.getElementById("boomBtn");
 
 const sampleFiles=document.getElementById("sampleFiles");
 const sampleFolder=document.getElementById("sampleFolder");
-const bankList=document.getElementById("bankList");
 const keyMode=document.getElementById("keyMode");
 const clearBank=document.getElementById("clearBank");
+const resetAssign=document.getElementById("resetAssign");
 
 const fxToggle=document.getElementById("fxToggle");
 const mixAmt=document.getElementById("mixAmt");
@@ -191,28 +253,44 @@ const filterLabel=document.getElementById("filterLabel");
 const distLabel=document.getElementById("distLabel");
 const reverbLabel=document.getElementById("reverbLabel");
 
-/* AUDIO (simple) */
+const padsEl=document.getElementById("pads");
+const assignmentsEl=document.getElementById("assignments");
+
+/* SIMPLE AUDIO */
 const beat=new Audio(BEAT_FILE); beat.loop=true;
 const elvis=new Audio(ELVIS_FILE);
 const boom=new Audio(BOOM_FILE);
 
 /* WEB AUDIO */
 let ctx;
-function ac(){
-  if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)();
-  return ctx;
-}
+function ac(){ if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)(); return ctx; }
 
-/* ===== KEY ENGINE ===== */
-const KEY_ORDER = "ASDFGHJKLQWERTYUIOP".split("");
-const KEYS = new Set(KEY_ORDER);
+/* Sample list (raw) and decoded buffers */
+let loadedFiles = []; // [{name, file}]
+const sampleBuffers = new Map(); // name => AudioBuffer
 
-/* Sample bank: key -> {name, buffer} */
-const sampleBank = new Map();
+/* Assignment map: key => sampleName | "" */
+let assignments = loadAssignments();
 
 /* FX graph nodes */
 let master, dryGain, fxIn, filter, delay, feedback, reverbSend, convolver, distort, wetGain;
 let fxEnabled = true;
+
+function saveAssignments(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments)); }catch{}
+}
+function loadAssignments(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return Object.fromEntries(KEY_ORDER.map(k=>[k,""]));
+    const obj = JSON.parse(raw);
+    // ensure all keys exist
+    for(const k of KEY_ORDER){ if(typeof obj[k] !== "string") obj[k] = ""; }
+    return obj;
+  }catch{
+    return Object.fromEntries(KEY_ORDER.map(k=>[k,""]));
+  }
+}
 
 /* Impulse reverb */
 function makeImpulse(seconds=1.6, decay=2.2){
@@ -229,7 +307,7 @@ function makeImpulse(seconds=1.6, decay=2.2){
   return impulse;
 }
 
-/* Soft distortion curve (less harsh) */
+/* Soft distortion */
 function makeDistortionCurve(amount){
   const n = 44100;
   const curve = new Float32Array(n);
@@ -276,7 +354,7 @@ function ensureGraph(){
   reverbSend.gain.value = 0.10;
 
   wetGain = c.createGain();
-  wetGain.gain.value = 0.0; // controlled by FX MIX
+  wetGain.gain.value = 0.0;
 
   // feedback loop
   delay.connect(feedback);
@@ -311,30 +389,24 @@ function syncFX(){
 
   if(!master) return;
 
-  // overall key volume
   master.gain.value = Math.max(0.05, +keyVol.value);
 
-  // FX ON/OFF + MIX (main "not annoying" control)
   const mix = fxEnabled ? (+mixAmt.value) : 0;
   dryGain.gain.value = 1 - (mix * 0.85);
   wetGain.gain.value = mix;
 
-  // Echo (safe cap so it never screams)
   const e = +echoAmt.value;
-  delay.delayTime.value = 0.10 + e * 0.18;              // 0.10..0.28
-  feedback.gain.value  = Math.min(0.45, e * 0.55);      // hard cap
+  delay.delayTime.value = 0.10 + e * 0.18;
+  feedback.gain.value  = Math.min(0.45, e * 0.55);
 
-  // Filter (gentle)
   const f = +filterAmt.value;
   const minF = 900;
   const maxF = 18000;
   filter.frequency.value = maxF - f * (maxF - minF);
 
-  // Distortion (soft)
   const d = +distAmt.value;
   distort.curve = makeDistortionCurve(d);
 
-  // Reverb (gentle)
   const r = +reverbAmt.value;
   reverbSend.gain.value = r * 0.45;
 }
@@ -351,145 +423,17 @@ fxToggle.onclick = ()=>{
   syncFX();
 };
 
-/* Play sample on key */
-function playSampleForKey(key){
-  const entry = sampleBank.get(key);
-  if(!entry) return false;
-
-  ensureGraph();
-  const c = ac();
-  const src = c.createBufferSource();
-  src.buffer = entry.buffer;
-
-  // route to dry + fx
-  src.connect(dryGain);
-  src.connect(fxIn);
-
-  src.start();
-  return true;
-}
-
-/* Play synth on key */
-function playSynth(){
-  ensureGraph();
-  const c = ac();
-
-  const o = c.createOscillator();
-  const g = c.createGain();
-
-  const now = c.currentTime;
-  const base = 180 + Math.random()*820;
-
-  o.type = Math.random() > 0.5 ? "sine" : "triangle";
-  o.frequency.setValueAtTime(base, now);
-  o.frequency.exponentialRampToValueAtTime(base*0.65, now+0.12);
-
-  g.gain.setValueAtTime(0.001, now);
-  g.gain.exponentialRampToValueAtTime(0.40, now+0.012);
-  g.gain.exponentialRampToValueAtTime(0.001, now+0.16);
-
-  o.connect(g);
-
-  // route to dry + fx
-  g.connect(dryGain);
-  g.connect(fxIn);
-
-  o.start(now);
-  o.stop(now+0.18);
-}
-
-/* Keyboard */
-window.addEventListener("keydown", async (e)=>{
-  const k = e.key.toUpperCase();
-  if(!KEYS.has(k)) return;
-  e.preventDefault();
-
-  try{ await ac().resume(); }catch{}
-  ensureGraph();
-
-  const mode = keyMode.value;
-  let didSample = false;
-
-  if(mode === "samples" || mode === "both"){
-    didSample = playSampleForKey(k);
-  }
-  if(mode === "synth" || mode === "both"){
-    playSynth();
-  }
-
-  const sampleName = didSample ? sampleBank.get(k).name : "(no sample)";
-  statusEl.textContent = `Key ${k} → ${mode.toUpperCase()} | Sample: ${sampleName}`;
-},{passive:false});
-
-/* Load files -> decode -> map */
-async function loadFiles(fileList){
-  const files = Array.from(fileList || []).filter(f => f.type.startsWith("audio/"));
-  if(!files.length){
-    bankList.innerHTML = "<b>Sample Bank:</b> (no audio files selected)";
-    return;
-  }
-
-  await ac().resume();
-  ensureGraph();
-
-  sampleBank.clear();
-
-  const c = ac();
-  const max = Math.min(files.length, KEY_ORDER.length);
-
-  bankList.innerHTML = "<b>Sample Bank:</b><br>Loading…";
-
-  for(let i=0;i<max;i++){
-    const file = files[i];
-    const arr = await file.arrayBuffer();
-    const buf = await c.decodeAudioData(arr);
-    const key = KEY_ORDER[i];
-    sampleBank.set(key, { name: file.name, buffer: buf });
-  }
-
-  renderBank();
-  statusEl.textContent = `Loaded ${sampleBank.size} samples. Press keys now.`;
-}
-
-function renderBank(){
-  if(sampleBank.size === 0){
-    bankList.innerHTML = "<b>Sample Bank:</b> (none loaded yet)";
-    return;
-  }
-  let html = "<b>Sample Bank:</b><br>";
-  for(const key of KEY_ORDER){
-    if(sampleBank.has(key)){
-      html += `<span class="mono">${key}</span> → ${escapeHtml(sampleBank.get(key).name)}<br>`;
-    }
-  }
-  bankList.innerHTML = html;
-}
-
-function escapeHtml(s){
-  return (s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-sampleFiles.addEventListener("change", e => loadFiles(e.target.files));
-sampleFolder.addEventListener("change", e => loadFiles(e.target.files));
-
-clearBank.onclick=()=>{
-  sampleBank.clear();
-  renderBank();
-  statusEl.textContent = "Sample bank cleared.";
-};
-
-/* Volumes */
-function syncVol(){
-  beat.volume=+beatVol.value;
+function syncLabels(){
   beatVolLabel.textContent=(+beatVol.value).toFixed(2);
   keyVolLabel.textContent=(+keyVol.value).toFixed(2);
-  syncFX();
+  synthLabel.textContent=(+synthAmt.value).toFixed(2);
 }
-beatVol.oninput=syncVol;
-keyVol.oninput=syncVol;
-syncVol();
+beatVol.oninput=()=>{ beat.volume=+beatVol.value; syncLabels(); };
+keyVol.oninput=()=>{ syncLabels(); syncFX(); };
+synthAmt.oninput=()=>{ syncLabels(); };
+beat.volume=+beatVol.value; syncLabels();
 
-/* BEAT */
+/* Beat buttons */
 startBeat.onclick=async()=>{
   try{
     await ac().resume();
@@ -508,11 +452,209 @@ stopBeat.onclick=()=>{
   statusEl.textContent="Status: stopped";
 };
 
-/* FX Buttons */
+/* FX buttons */
 elvisBtn.onclick=async()=>{ try{await ac().resume(); elvis.currentTime=0; await elvis.play();}catch{} };
 boomBtn.onclick=async()=>{ try{await ac().resume(); boom.currentTime=0; await boom.play();}catch{} };
 
-/* RECORDER */
+/* Build Pads UI */
+function renderPads(){
+  padsEl.innerHTML = "";
+  for(const k of KEY_ORDER){
+    const div = document.createElement("div");
+    div.className = "pad";
+    div.dataset.key = k;
+    div.innerHTML = `
+      <div class="padTop">
+        <div class="padKey">${k}</div>
+        <div class="padMode">${keyMode.value.toUpperCase()}</div>
+      </div>
+      <div class="padName">${assignments[k] ? assignments[k] : "— no sample —"}</div>
+    `;
+    div.addEventListener("pointerdown", async (e)=>{
+      e.preventDefault();
+      await triggerKey(k);
+      flashPad(k);
+    });
+    padsEl.appendChild(div);
+  }
+}
+function flashPad(k){
+  const pad = padsEl.querySelector(`.pad[data-key="${k}"]`);
+  if(!pad) return;
+  pad.classList.add("on");
+  setTimeout(()=>pad.classList.remove("on"), 90);
+}
+
+/* Assignment UI */
+function renderAssignments(){
+  assignmentsEl.innerHTML = "";
+  for(const k of KEY_ORDER){
+    const row = document.createElement("div");
+    row.className = "assignRow";
+    row.innerHTML = `
+      <div class="k">${k}</div>
+      <select data-key="${k}"></select>
+    `;
+    const sel = row.querySelector("select");
+    fillSelect(sel, assignments[k]);
+    sel.addEventListener("change", ()=>{
+      assignments[k] = sel.value;
+      saveAssignments();
+      renderPads();
+    });
+    assignmentsEl.appendChild(row);
+  }
+}
+function fillSelect(sel, current){
+  sel.innerHTML = "";
+  const opt0 = document.createElement("option");
+  opt0.value = "";
+  opt0.textContent = "— no sample —";
+  sel.appendChild(opt0);
+
+  for(const f of loadedFiles){
+    const o = document.createElement("option");
+    o.value = f.name;
+    o.textContent = f.name;
+    sel.appendChild(o);
+  }
+  sel.value = current || "";
+}
+
+/* Load & decode */
+async function loadFiles(fileList){
+  const files = Array.from(fileList || []).filter(f => f.type.startsWith("audio/"));
+  if(!files.length){
+    bankStatus.textContent = "Sample Bank: no audio files selected.";
+    return;
+  }
+
+  await ac().resume();
+  ensureGraph();
+
+  loadedFiles = files.map(f => ({name: f.name, file: f}));
+  sampleBuffers.clear();
+
+  bankStatus.textContent = "Sample Bank: loading…";
+
+  // decode each file
+  const c = ac();
+  for(const f of loadedFiles){
+    try{
+      const arr = await f.file.arrayBuffer();
+      const buf = await c.decodeAudioData(arr);
+      sampleBuffers.set(f.name, buf);
+    }catch{}
+  }
+
+  bankStatus.textContent = `Sample Bank: loaded ${sampleBuffers.size} / ${loadedFiles.length} files.`;
+
+  // if a key is assigned to a file name that no longer exists, clear it
+  for(const k of KEY_ORDER){
+    if(assignments[k] && !sampleBuffers.has(assignments[k])) assignments[k] = "";
+  }
+  saveAssignments();
+
+  renderAssignments();
+  renderPads();
+}
+
+sampleFiles.addEventListener("change", e => loadFiles(e.target.files));
+sampleFolder.addEventListener("change", e => loadFiles(e.target.files));
+
+clearBank.onclick=()=>{
+  loadedFiles = [];
+  sampleBuffers.clear();
+  bankStatus.textContent = "Sample Bank: cleared.";
+  // keep assignments but they won't play until files loaded again
+  renderAssignments();
+  renderPads();
+};
+
+resetAssign.onclick=()=>{
+  assignments = Object.fromEntries(KEY_ORDER.map(k=>[k,""]));
+  saveAssignments();
+  renderAssignments();
+  renderPads();
+  statusEl.textContent = "Assignments reset.";
+};
+
+keyMode.onchange=()=>{
+  renderPads();
+};
+
+/* Play assigned sample for key */
+function playSampleForKey(k){
+  const name = assignments[k];
+  if(!name) return false;
+  const buf = sampleBuffers.get(name);
+  if(!buf) return false;
+
+  ensureGraph();
+  const c = ac();
+  const src = c.createBufferSource();
+  src.buffer = buf;
+
+  src.connect(dryGain);
+  src.connect(fxIn);
+
+  src.start();
+  return true;
+}
+
+/* Play synth for key */
+function playSynth(){
+  ensureGraph();
+  const c = ac();
+
+  const o = c.createOscillator();
+  const g = c.createGain();
+
+  const now = c.currentTime;
+  const base = 180 + Math.random()*820;
+
+  o.type = Math.random() > 0.5 ? "sine" : "triangle";
+  o.frequency.setValueAtTime(base, now);
+  o.frequency.exponentialRampToValueAtTime(base*0.65, now+0.12);
+
+  const lvl = Math.max(0, Math.min(1, +synthAmt.value));
+  g.gain.setValueAtTime(0.001, now);
+  g.gain.exponentialRampToValueAtTime(0.40*lvl, now+0.012);
+  g.gain.exponentialRampToValueAtTime(0.001, now+0.16);
+
+  o.connect(g);
+  g.connect(dryGain);
+  g.connect(fxIn);
+
+  o.start(now);
+  o.stop(now+0.18);
+}
+
+/* Trigger key (used by keyboard + pad taps) */
+async function triggerKey(k){
+  try{ await ac().resume(); }catch{}
+  ensureGraph();
+
+  const mode = keyMode.value;
+  let didSample = false;
+
+  if(mode === "samples" || mode === "both") didSample = playSampleForKey(k);
+  if(mode === "synth" || mode === "both") playSynth();
+
+  const sampleName = didSample ? assignments[k] : "(no sample)";
+  statusEl.textContent = `Key ${k} → ${mode.toUpperCase()} | Sample: ${sampleName}`;
+}
+
+/* Keyboard */
+window.addEventListener("keydown", async (e)=>{
+  const k = e.key.toUpperCase();
+  if(!KEYS.has(k)) return;
+  e.preventDefault();
+  await triggerKey(k);
+  flashPad(k);
+},{passive:false});
+
+/* RECORDER (mic only) */
 const recBtn=document.getElementById("recBtn");
 const stopRecBtn=document.getElementById("stopRecBtn");
 const recStatus=document.getElementById("recStatus");
@@ -531,8 +673,8 @@ recBtn.onclick=async()=>{
     const url=URL.createObjectURL(blob);
     playback.src=url;
     download.href=url;
-    download.download="mychillingtime-voice.webm";
-    download.style.display="block";
+    download.download="dj1-voice.webm";
+    download.style.display="inline-block";
     recStatus.textContent="Recorder: saved";
     stream.getTracks().forEach(t=>t.stop());
   };
@@ -541,12 +683,16 @@ recBtn.onclick=async()=>{
   stopRecBtn.disabled=false;
   recStatus.textContent="Recorder: recording…";
 };
-
 stopRecBtn.onclick=()=>{
   rec.stop();
   recBtn.disabled=false;
   stopRecBtn.disabled=true;
 };
+
+/* Init UI */
+renderPads();
+renderAssignments();
 </script>
 </body>
 </html>
+
