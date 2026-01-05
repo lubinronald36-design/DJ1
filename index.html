@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DJ1 — Pads + Samples + Synth + FX (FULL)</title>
+<title>DJ1 — Pads + Samples + Synth + FX (FULL + MIX REC)</title>
 
 <style>
 body{margin:0;padding:20px;font-family:system-ui,Arial;background:#0b0d12;color:#eaeaff}
@@ -127,7 +127,7 @@ Repo files (same folder): <span class="mono">bott.mp3</span>, <span class="mono"
   <div class="status" id="bankStatus">Sample Bank: none loaded yet.</div>
 </div>
 
-<!-- FX (FIXED: ON/OFF + MIX + SOFT DISTORTION + SAFE ECHO) -->
+<!-- FX -->
 <div class="card">
   <div class="row">
     <button id="elvisBtn" class="primary">🎙️ ELVIS</button>
@@ -191,16 +191,29 @@ Repo files (same folder): <span class="mono">bott.mp3</span>, <span class="mono"
   <div id="assignments" class="assignGrid" style="margin-top:10px"></div>
 </div>
 
-<!-- RECORDER -->
+<!-- RECORDERS -->
 <div class="card">
   <div class="row">
-    <button id="recBtn" class="primary">⏺ Start Recording</button>
-    <button id="stopRecBtn" class="danger" disabled>⏹ Stop & Save</button>
+    <button id="mixRecBtn" class="primary">🎚️ Start MIX Recording</button>
+    <button id="mixStopBtn" class="danger" disabled>💾 Stop & Save (MIX)</button>
   </div>
-  <div class="status" id="recStatus">Recorder: idle.</div>
+  <div class="status" id="mixStatus">Mix Recorder: idle.</div>
+  <audio id="mixPlayback" controls></audio>
+  <a id="mixDownload" style="display:none">⬇ Download MIX</a>
+
+  <hr style="border:0;border-top:1px solid rgba(255,255,255,.12);margin:14px 0">
+
+  <div class="row">
+    <button id="recBtn" class="primary">🎤 Start MIC Recording</button>
+    <button id="stopRecBtn" class="danger" disabled>💾 Stop & Save (MIC)</button>
+  </div>
+  <div class="status" id="recStatus">Mic Recorder: idle.</div>
   <audio id="playback" controls></audio>
-  <a id="download" style="display:none">⬇ Download recording</a>
-  <div class="small">Note: mic recording needs HTTPS (GitHub Pages is fine).</div>
+  <a id="download" style="display:none">⬇ Download MIC</a>
+
+  <div class="small">
+    Mix recording captures <b>everything you hear</b>. Mic recording captures only your microphone.
+  </div>
 </div>
 
 </div>
@@ -256,26 +269,32 @@ const reverbLabel=document.getElementById("reverbLabel");
 const padsEl=document.getElementById("pads");
 const assignmentsEl=document.getElementById("assignments");
 
-/* SIMPLE AUDIO */
-const beat=new Audio(BEAT_FILE); beat.loop=true;
-const elvis=new Audio(ELVIS_FILE);
-const boom=new Audio(BOOM_FILE);
+/* SIMPLE AUDIO ELEMENTS (we will route them into WebAudio for MIX recording) */
+const beatEl=new Audio(BEAT_FILE); beatEl.loop=true;
+const elvisEl=new Audio(ELVIS_FILE);
+const boomEl=new Audio(BOOM_FILE);
 
 /* WEB AUDIO */
 let ctx;
 function ac(){ if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)(); return ctx; }
 
-/* Sample list (raw) and decoded buffers */
+/* Sample buffers */
 let loadedFiles = []; // [{name, file}]
 const sampleBuffers = new Map(); // name => AudioBuffer
 
-/* Assignment map: key => sampleName | "" */
+/* Assignment map */
 let assignments = loadAssignments();
 
-/* FX graph nodes */
+/* MIX BUS + FX graph nodes */
+let mixBus, mixToDest, mixStreamDest; // global mix routing
 let master, dryGain, fxIn, filter, delay, feedback, reverbSend, convolver, distort, wetGain;
 let fxEnabled = true;
 
+/* MediaElementSources (beat/elvis/boom) */
+let beatSrc, elvisSrc, boomSrc;
+let beatGain, elvisGain, boomGain;
+
+/* ===== storage ===== */
 function saveAssignments(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments)); }catch{}
 }
@@ -284,7 +303,6 @@ function loadAssignments(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(!raw) return Object.fromEntries(KEY_ORDER.map(k=>[k,""]));
     const obj = JSON.parse(raw);
-    // ensure all keys exist
     for(const k of KEY_ORDER){ if(typeof obj[k] !== "string") obj[k] = ""; }
     return obj;
   }catch{
@@ -292,7 +310,7 @@ function loadAssignments(){
   }
 }
 
-/* Impulse reverb */
+/* ===== FX helpers ===== */
 function makeImpulse(seconds=1.6, decay=2.2){
   const c = ac();
   const rate = c.sampleRate;
@@ -306,8 +324,6 @@ function makeImpulse(seconds=1.6, decay=2.2){
   }
   return impulse;
 }
-
-/* Soft distortion */
 function makeDistortionCurve(amount){
   const n = 44100;
   const curve = new Float32Array(n);
@@ -320,18 +336,35 @@ function makeDistortionCurve(amount){
   return curve;
 }
 
+/* ===== main audio graph =====
+   Keys/Synth -> (dry+wet) -> master -> mixBus
+   Beat/Elvis/Boom elements -> gains -> mixBus
+   mixBus -> ctx.destination AND mixStreamDest (for recorder)
+*/
 function ensureGraph(){
   const c = ac();
-  if(master) return;
+  if(mixBus) return;
 
+  // global mix
+  mixBus = c.createGain();
+  mixBus.gain.value = 1.0;
+
+  // send mix to speakers
+  mixToDest = c.createGain();
+  mixToDest.gain.value = 1.0;
+  mixBus.connect(mixToDest);
+  mixToDest.connect(c.destination);
+
+  // send mix to recorder stream
+  mixStreamDest = c.createMediaStreamDestination();
+  mixBus.connect(mixStreamDest);
+
+  // KEY FX section
   master = c.createGain();
   master.gain.value = 0.65;
 
-  dryGain = c.createGain();
-  dryGain.gain.value = 1.0;
-
-  fxIn = c.createGain();
-  fxIn.gain.value = 1.0;
+  dryGain = c.createGain(); dryGain.gain.value = 1.0;
+  fxIn = c.createGain(); fxIn.gain.value = 1.0;
 
   filter = c.createBiquadFilter();
   filter.type = "lowpass";
@@ -371,15 +404,39 @@ function ensureGraph(){
   reverbSend.connect(convolver);
   convolver.connect(wetGain);
 
-  // dry + wet to master
+  // dry + wet -> master
   dryGain.connect(master);
   wetGain.connect(master);
 
-  master.connect(c.destination);
+  // master -> global mix
+  master.connect(mixBus);
+
+  // Route media elements into mixBus (once)
+  beatSrc = c.createMediaElementSource(beatEl);
+  elvisSrc = c.createMediaElementSource(elvisEl);
+  boomSrc = c.createMediaElementSource(boomEl);
+
+  beatGain = c.createGain();
+  elvisGain = c.createGain();
+  boomGain = c.createGain();
+
+  beatGain.gain.value = +beatVol.value;
+  elvisGain.gain.value = 1.0;
+  boomGain.gain.value = 1.0;
+
+  beatSrc.connect(beatGain); beatGain.connect(mixBus);
+  elvisSrc.connect(elvisGain); elvisGain.connect(mixBus);
+  boomSrc.connect(boomGain); boomGain.connect(mixBus);
+
+  // IMPORTANT: do NOT also let the elements output directly (we control via WebAudio)
+  beatEl.volume = 0;
+  elvisEl.volume = 0;
+  boomEl.volume = 0;
 
   syncFX();
 }
 
+/* FX sync */
 function syncFX(){
   echoLabel.textContent = (+echoAmt.value).toFixed(2);
   filterLabel.textContent = (+filterAmt.value).toFixed(2);
@@ -423,23 +480,28 @@ fxToggle.onclick = ()=>{
   syncFX();
 };
 
+/* labels + volumes */
 function syncLabels(){
   beatVolLabel.textContent=(+beatVol.value).toFixed(2);
   keyVolLabel.textContent=(+keyVol.value).toFixed(2);
   synthLabel.textContent=(+synthAmt.value).toFixed(2);
 }
-beatVol.oninput=()=>{ beat.volume=+beatVol.value; syncLabels(); };
+beatVol.oninput=()=>{
+  // beat volume in WebAudio gain (when graph exists)
+  if(beatGain) beatGain.gain.value = +beatVol.value;
+  syncLabels();
+};
 keyVol.oninput=()=>{ syncLabels(); syncFX(); };
 synthAmt.oninput=()=>{ syncLabels(); };
-beat.volume=+beatVol.value; syncLabels();
+syncLabels();
 
 /* Beat buttons */
 startBeat.onclick=async()=>{
   try{
     await ac().resume();
     ensureGraph();
-    beat.currentTime=0;
-    await beat.play();
+    beatEl.currentTime=0;
+    await beatEl.play();
     startBeat.disabled=true; stopBeat.disabled=false;
     statusEl.textContent="Status: beat playing";
   }catch{
@@ -447,14 +509,14 @@ startBeat.onclick=async()=>{
   }
 };
 stopBeat.onclick=()=>{
-  beat.pause(); beat.currentTime=0;
+  beatEl.pause(); beatEl.currentTime=0;
   startBeat.disabled=false; stopBeat.disabled=true;
   statusEl.textContent="Status: stopped";
 };
 
-/* FX buttons */
-elvisBtn.onclick=async()=>{ try{await ac().resume(); elvis.currentTime=0; await elvis.play();}catch{} };
-boomBtn.onclick=async()=>{ try{await ac().resume(); boom.currentTime=0; await boom.play();}catch{} };
+/* Elvis/Boom buttons */
+elvisBtn.onclick=async()=>{ try{await ac().resume(); ensureGraph(); elvisEl.currentTime=0; await elvisEl.play();}catch{} };
+boomBtn.onclick=async()=>{ try{await ac().resume(); ensureGraph(); boomEl.currentTime=0; await boomEl.play();}catch{} };
 
 /* Build Pads UI */
 function renderPads(){
@@ -479,7 +541,7 @@ function renderPads(){
   }
 }
 function flashPad(k){
-  const pad = padsEl.querySelector(`.pad[data-key="${k}"]`);
+  const pad = padsEl.querySelector(\`.pad[data-key="\${k}"]\`);
   if(!pad) return;
   pad.classList.add("on");
   setTimeout(()=>pad.classList.remove("on"), 90);
@@ -537,7 +599,6 @@ async function loadFiles(fileList){
 
   bankStatus.textContent = "Sample Bank: loading…";
 
-  // decode each file
   const c = ac();
   for(const f of loadedFiles){
     try{
@@ -549,7 +610,6 @@ async function loadFiles(fileList){
 
   bankStatus.textContent = `Sample Bank: loaded ${sampleBuffers.size} / ${loadedFiles.length} files.`;
 
-  // if a key is assigned to a file name that no longer exists, clear it
   for(const k of KEY_ORDER){
     if(assignments[k] && !sampleBuffers.has(assignments[k])) assignments[k] = "";
   }
@@ -566,7 +626,6 @@ clearBank.onclick=()=>{
   loadedFiles = [];
   sampleBuffers.clear();
   bankStatus.textContent = "Sample Bank: cleared.";
-  // keep assignments but they won't play until files loaded again
   renderAssignments();
   renderPads();
 };
@@ -579,9 +638,7 @@ resetAssign.onclick=()=>{
   statusEl.textContent = "Assignments reset.";
 };
 
-keyMode.onchange=()=>{
-  renderPads();
-};
+keyMode.onchange=()=> renderPads();
 
 /* Play assigned sample for key */
 function playSampleForKey(k){
@@ -630,7 +687,7 @@ function playSynth(){
   o.stop(now+0.18);
 }
 
-/* Trigger key (used by keyboard + pad taps) */
+/* Trigger key */
 async function triggerKey(k){
   try{ await ac().resume(); }catch{}
   ensureGraph();
@@ -654,7 +711,61 @@ window.addEventListener("keydown", async (e)=>{
   flashPad(k);
 },{passive:false});
 
-/* RECORDER (mic only) */
+/* ===== MIX RECORDER (records mixStreamDest.stream) ===== */
+const mixRecBtn=document.getElementById("mixRecBtn");
+const mixStopBtn=document.getElementById("mixStopBtn");
+const mixStatus=document.getElementById("mixStatus");
+const mixPlayback=document.getElementById("mixPlayback");
+const mixDownload=document.getElementById("mixDownload");
+
+let mixRec, mixChunks=[];
+
+mixRecBtn.onclick=async()=>{
+  try{ await ac().resume(); }catch{}
+  ensureGraph();
+
+  // MediaRecorder on the MIX stream
+  const stream = mixStreamDest.stream;
+  mixChunks = [];
+
+  // choose a supported mimeType if possible
+  let options = {};
+  const preferred = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "video/webm;codecs=opus" // fallback some browsers
+  ];
+  for(const mt of preferred){
+    if(window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(mt)){
+      options.mimeType = mt; break;
+    }
+  }
+
+  mixRec = new MediaRecorder(stream, options);
+  mixRec.ondataavailable = (e)=>{ if(e.data && e.data.size) mixChunks.push(e.data); };
+  mixRec.onstop = ()=>{
+    const blob = new Blob(mixChunks, { type: mixRec.mimeType || "audio/webm" });
+    const url = URL.createObjectURL(blob);
+    mixPlayback.src = url;
+    mixDownload.href = url;
+    mixDownload.download = "dj1-mix.webm";
+    mixDownload.style.display = "inline-block";
+    mixStatus.textContent = "Mix Recorder: saved.";
+  };
+
+  mixRec.start();
+  mixRecBtn.disabled = true;
+  mixStopBtn.disabled = false;
+  mixStatus.textContent = "Mix Recorder: recording FULL MIX…";
+};
+
+mixStopBtn.onclick=()=>{
+  if(mixRec && mixRec.state !== "inactive") mixRec.stop();
+  mixRecBtn.disabled = false;
+  mixStopBtn.disabled = true;
+};
+
+/* ===== MIC RECORDER (optional) ===== */
 const recBtn=document.getElementById("recBtn");
 const stopRecBtn=document.getElementById("stopRecBtn");
 const recStatus=document.getElementById("recStatus");
@@ -673,15 +784,15 @@ recBtn.onclick=async()=>{
     const url=URL.createObjectURL(blob);
     playback.src=url;
     download.href=url;
-    download.download="dj1-voice.webm";
+    download.download="dj1-mic.webm";
     download.style.display="inline-block";
-    recStatus.textContent="Recorder: saved";
+    recStatus.textContent="Mic Recorder: saved";
     stream.getTracks().forEach(t=>t.stop());
   };
   rec.start();
   recBtn.disabled=true;
   stopRecBtn.disabled=false;
-  recStatus.textContent="Recorder: recording…";
+  recStatus.textContent="Mic Recorder: recording…";
 };
 stopRecBtn.onclick=()=>{
   rec.stop();
@@ -695,4 +806,5 @@ renderAssignments();
 </script>
 </body>
 </html>
+
 
